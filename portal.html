@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Staff Portal - Ina-Inakay Center, Inc.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0C2742;--navy2:#16324F;--red:#C85731;--gold:#C9A227;--cream:#F7F3EA;
+  --rule:#E4DED2;--ink:#233042;--ink3:#6E7787;--white:#fff;--green:#1E7A46;--amber:#B7791F;--danger:#B3261E;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Inter,system-ui,sans-serif;background:var(--cream);color:var(--ink);font-size:15px;}
+h1,h2,h3,.f-lex{font-family:Lexend,sans-serif;}
+button{font-family:inherit;cursor:pointer;border:none;}
+input,select,textarea{font-family:inherit;font-size:.95rem;width:100%;padding:10px 12px;
+  border:1.5px solid var(--rule);border-radius:8px;background:#fff;color:var(--ink);}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);}
+textarea{resize:vertical;min-height:76px;}
+label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--red);margin:14px 0 5px;}
+.btn{background:var(--red);color:#fff;border-radius:8px;padding:10px 18px;font-weight:600;font-size:.9rem;
+  transition:transform .2s,opacity .2s;}
+.btn:hover{transform:translateY(-1px);} .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn.navy{background:var(--navy);} .btn.ghost{background:transparent;border:1.5px solid var(--rule);color:var(--ink);}
+.btn.sm{padding:6px 12px;font-size:.8rem;border-radius:6px;}
+.btn.danger{background:var(--danger);}
+.btn.green{background:var(--green);}
+.pill{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;}
+.pill.pending{background:#FFF4DA;color:var(--amber);}
+.pill.approved{background:#E1F5E9;color:var(--green);}
+.pill.revision{background:#FDE7E5;color:var(--danger);}
+.pill.role{background:#E7EDF4;color:var(--navy);}
+.pill.gold{background:var(--gold);color:#fff;}
+.pill.off{background:#EEE;color:var(--ink3);}
+
+/* login */
+#login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:linear-gradient(160deg,var(--navy2),var(--navy));}
+.lcard{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:400px;
+  box-shadow:0 18px 60px rgba(0,0,0,.35);}
+.lcard h1{font-size:1.25rem;color:var(--navy);}
+.lcard .sub{font-size:.85rem;color:var(--ink3);margin:6px 0 18px;line-height:1.5;}
+.msg{font-size:.85rem;border-radius:8px;padding:10px 12px;margin-top:14px;display:none;line-height:1.5;}
+.msg.err{background:#FDE7E5;color:var(--danger);display:block;}
+.msg.ok{background:#E1F5E9;color:var(--green);display:block;}
+.msg.warn{background:#FFF4DA;color:var(--amber);display:block;}
+
+/* shell */
+#app{display:none;min-height:100vh;}
+header.top{background:var(--navy);color:#fff;padding:12px 22px;display:flex;align-items:center;
+  gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:40;}
+header.top .brand{font-family:Lexend;font-weight:700;font-size:1rem;}
+header.top .brand small{display:block;font-weight:400;font-size:.68rem;color:#9FB0C2;letter-spacing:.1em;text-transform:uppercase;}
+.who{margin-left:auto;text-align:right;font-size:.8rem;line-height:1.35;}
+.who b{display:block;}
+.who small{color:#9FB0C2;}
+nav.tabs{background:var(--navy2);display:flex;gap:2px;padding:0 14px;overflow-x:auto;position:sticky;top:57px;z-index:39;}
+nav.tabs button{background:transparent;color:#B9C6D4;padding:12px 16px;font-size:.86rem;font-weight:600;
+  border-bottom:3px solid transparent;white-space:nowrap;}
+nav.tabs button.on{color:#fff;border-bottom-color:var(--gold);}
+main{padding:24px 22px 60px;max-width:1180px;margin:0 auto;}
+.page{display:none;} .page.on{display:block;}
+h2.pt{font-size:1.15rem;color:var(--navy);margin-bottom:4px;}
+p.ps{font-size:.86rem;color:var(--ink3);margin-bottom:18px;}
+.card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:18px;margin-bottom:16px;
+  box-shadow:0 2px 10px rgba(12,39,66,.05);}
+.grid{display:grid;gap:14px;}
+.g4{grid-template-columns:repeat(4,1fr);} .g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:860px){.g4,.g3,.g2{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr;} nav.tabs{top:0;position:static;} header.top{position:static;}}
+.stat{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px;}
+.stat .n{font-family:Lexend;font-size:1.7rem;font-weight:700;color:var(--navy);line-height:1;}
+.stat .l{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-top:6px;}
+table{width:100%;border-collapse:collapse;font-size:.86rem;}
+th{text-align:left;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--red);
+  padding:8px 10px;border-bottom:1.5px solid var(--rule);white-space:nowrap;}
+td{padding:10px;border-bottom:1px solid var(--rule);vertical-align:top;}
+tr:hover td{background:#FBF9F5;}
+.tw{overflow-x:auto;}
+.bar{height:6px;background:var(--rule);border-radius:6px;overflow:hidden;min-width:70px;}
+.bar i{display:block;height:100%;background:var(--gold);}
+.item{border:1px solid var(--rule);border-radius:10px;padding:14px;margin-bottom:10px;background:#fff;}
+.item h4{font-family:Lexend;font-size:.95rem;color:var(--navy);}
+.item .meta{font-size:.76rem;color:var(--ink3);margin-top:3px;}
+.item .body{font-size:.88rem;margin-top:8px;line-height:1.55;white-space:pre-wrap;}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.right{margin-left:auto;}
+#modalWrap{position:fixed;inset:0;background:rgba(12,39,66,.55);z-index:80;display:none;
+  align-items:center;justify-content:center;padding:20px;}
+#modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow:auto;}
+#modal h3{font-size:1.05rem;color:var(--navy);margin-bottom:4px;}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:200;background:var(--navy);
+  color:#fff;padding:12px 20px;border-radius:10px;font-size:.88rem;display:none;max-width:90vw;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);}
+#toast.err{background:var(--danger);} #toast.ok{background:var(--green);}
+.empty{text-align:center;color:var(--ink3);font-size:.88rem;padding:26px;}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.hint{font-size:.78rem;color:var(--ink3);margin-top:5px;line-height:1.5;}
+.warnbox{background:#FFF4DA;border-left:3px solid var(--amber);border-radius:6px;padding:10px 12px;
+  font-size:.8rem;color:#7A5B10;line-height:1.55;margin-top:8px;}
+code{background:var(--cream);padding:2px 6px;border-radius:4px;font-size:.85em;}
+.pill.prog-done{background:#E1F5E9;color:var(--green);}
+.pill.prog-part{background:#FFF4DA;color:var(--amber);}
+.pill.prog-wip{background:#E7EDF4;color:var(--navy);}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;}
+.filters label{margin:0 0 4px;}
+.filters select,.filters input{padding:8px 10px;font-size:.86rem;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{background:#fff;border:1.5px solid var(--rule);border-radius:20px;padding:6px 14px;
+  font-size:.8rem;font-weight:600;color:var(--ink3);cursor:pointer;}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.chip b{color:inherit;}
+.mrow td{background:var(--cream);font-weight:700;font-size:.78rem;color:var(--navy);
+  letter-spacing:.06em;text-transform:uppercase;}
+.pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.pager .info{font-size:.82rem;color:var(--ink3);}
+.linkcheck{font-size:.8rem;margin-top:6px;line-height:1.5;}
+.linkcheck.good{color:var(--green);} .linkcheck.bad{color:var(--danger);}
+.feed{font-size:.85rem;}
+.feed div{padding:8px 0;border-bottom:1px solid var(--rule);}
+.feed div:last-child{border:none;}
+
+/* boot splash - covers the login card while the session is checked */
+#boot{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:18px;background:linear-gradient(160deg,var(--navy2),var(--navy));color:#fff;}
+#boot .bmark{width:54px;height:54px;border-radius:50%;border:3px solid rgba(255,255,255,.22);
+  border-top-color:var(--gold);animation:sp .9s linear infinite;}
+#boot .btxt{font-family:Lexend,sans-serif;font-weight:600;font-size:.95rem;letter-spacing:.02em;}
+#boot .bsub{font-size:.8rem;color:#9FB0C2;}
+#boot.hide{opacity:0;pointer-events:none;transition:opacity .35s ease;}
+
+/* thin activity bar - shows whenever a request is in flight */
+#netbar{position:fixed;top:0;left:0;height:3px;width:0;z-index:400;
+  background:linear-gradient(90deg,var(--gold),var(--red));transition:width .25s ease,opacity .3s;}
+
+/* blocking overlay for actions that must finish before anything else */
+#busyWrap{position:fixed;inset:0;z-index:250;background:rgba(12,39,66,.55);display:none;
+  align-items:center;justify-content:center;}
+#busyBox{background:#fff;border-radius:14px;padding:26px 30px;text-align:center;max-width:330px;}
+#busyBox .ring{width:38px;height:38px;margin:0 auto 14px;border-radius:50%;
+  border:3px solid var(--rule);border-top-color:var(--red);animation:sp .8s linear infinite;}
+#busyBox b{font-family:Lexend,sans-serif;font-size:.95rem;color:var(--navy);display:block;}
+#busyBox span{font-size:.8rem;color:var(--ink3);display:block;margin-top:6px;}
+
+/* segmented control */
+.seg{display:inline-flex;background:#fff;border:1.5px solid var(--rule);border-radius:10px;
+  overflow:hidden;margin-bottom:16px;}
+.seg button{background:transparent;padding:9px 18px;font-size:.86rem;font-weight:600;color:var(--ink3);}
+.seg button.on{background:var(--navy);color:#fff;}
+
+/* email assignment picker */
+.pickbox{border:1.5px solid var(--rule);border-radius:8px;padding:8px;background:#fff;}
+.picked{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.tag{background:var(--navy);color:#fff;border-radius:16px;padding:4px 10px;font-size:.76rem;
+  display:inline-flex;align-items:center;gap:6px;}
+.tag button{background:transparent;color:#fff;font-size:.9rem;line-height:1;padding:0;opacity:.75;}
+.suggest{max-height:170px;overflow:auto;border-top:1px solid var(--rule);margin-top:6px;}
+.suggest div{padding:7px 8px;border-radius:6px;cursor:pointer;font-size:.85rem;}
+.suggest div:hover{background:var(--cream);}
+.suggest div small{color:var(--ink3);display:block;font-size:.74rem;}
+.loadmore{text-align:center;margin-top:14px;}
+.period{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.period button{background:#fff;border:1.5px solid var(--rule);border-radius:8px;padding:6px 13px;
+  font-size:.8rem;font-weight:600;color:var(--ink3);}
+.period button.on{background:var(--gold);color:#fff;border-color:var(--gold);}
+.stat.click{cursor:pointer;transition:transform .2s,box-shadow .2s;}
+.stat.click:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(12,39,66,.12);}
+
+.org-box{border:1.5px solid var(--rule);border-radius:12px;padding:14px;margin-bottom:14px;background:#fff;}
+.org-box.level{border-left:4px solid var(--gold);}
+.org-box.dept{border-left:4px solid var(--navy);}
+.org-hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+.org-hd input{max-width:260px;font-weight:600;}
+.org-p{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--rule);
+ border-radius:9px;margin-bottom:7px;background:#FCFBF8;}
+.org-p img{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--cream);
+ border:2px solid var(--rule);flex-shrink:0;}
+.org-p .f{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.org-p .f input{padding:6px 9px;font-size:.84rem;}
+@media(max-width:700px){.org-p .f{grid-template-columns:1fr;}}
+.org-p .t{display:flex;gap:3px;flex-shrink:0;}
+.org-p .t button{width:26px;height:26px;border-radius:6px;background:var(--cream);color:var(--navy);
+ font-size:.78rem;line-height:1;}
+.org-p .t button.del{background:#FDE7E5;color:var(--danger);}
+.org-grp{border:1px dashed var(--rule);border-radius:9px;padding:10px;margin:9px 0;background:#FAFAF7;}
+.org-empty{text-align:center;color:var(--ink3);padding:26px;border:1.5px dashed var(--rule);
+ border-radius:12px;font-size:.88rem;}
+.org-bar{position:sticky;bottom:0;background:var(--cream);padding:12px 0;border-top:1.5px solid var(--rule);
+ display:flex;gap:9px;align-items:center;flex-wrap:wrap;z-index:15;}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="boot">
+  <div class="bmark"></div>
+  <div class="btxt" id="bootTxt">Checking your session</div>
+  <div class="bsub">Ina-Inakay Center, Inc. Staff Portal</div>
+</div>
+<div id="netbar"></div>
+<div id="busyWrap"><div id="busyBox">
+  <div class="ring"></div><b id="busyTitle">Working...</b><span id="busyNote">Please wait a moment.</span>
+</div></div>
+
+<div id="login">
+  <div class="lcard">
+    <h1>Staff Portal</h1>
+    <div class="sub">Ina-Inakay Center, Inc.<br>Sign in with your organization email and password.</div>
+    <div id="loginForm">
+      <label>Email</label>
+      <input type="email" id="liEmail" autocomplete="username" placeholder="name@ina-inakay.com">
+      <label>Password</label>
+      <input type="password" id="liPw" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn" style="width:100%;margin-top:20px;padding:12px;" id="liBtn" onclick="doLogin()">Sign in</button>
+    </div>
+    <div id="changeForm" style="display:none;">
+      <div class="msg warn" style="display:block;">For your security, please set a new password before continuing.</div>
+      <label>Current password</label>
+      <input type="password" id="cpOld" autocomplete="current-password">
+      <label>New password (minimum 8 characters)</label>
+      <input type="password" id="cpNew" autocomplete="new-password">
+      <label>Confirm new password</label>
+      <input type="password" id="cpNew2" autocomplete="new-password" onkeydown="if(event.key==='Enter')doForcedChange()">
+      <button class="btn" style="width:100%;margin-top:20px;padding:12px;" id="cpBtn" onclick="doForcedChange()">Save and continue</button>
+    </div>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header class="top">
+    <div class="brand">Staff Portal<small>Ina-Inakay Center, Inc.</small></div>
+    <div class="who"><b id="whoName">-</b><small id="whoRole">-</small></div>
+    <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="doLogout()">Sign out</button>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <main>
+    <div class="page" id="p-dashboard"></div>
+    <div class="page" id="p-submissions"></div>
+    <div class="page" id="p-announcements"></div>
+    <div class="page" id="p-requirements"></div>
+    <div class="page" id="p-users"></div>
+    <div class="page" id="p-orgchart"></div>
+    <div class="page" id="p-audit"></div>
+    <div class="page" id="p-account"></div>
+  </main>
+</div>
+
+<div id="modalWrap" onclick="if(event.target===this)closeModal()"><div id="modal"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ===================================================================
+   CONFIG - paste your Apps Script Web App /exec URL here
+   =================================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyAI2TYyk1a4f_suiMncfQVOTGrCgixYZy9pN2wTis8MruyFb6Owhdo2THgnjL2lVRg/exec';
+
+/* ------------------------- API PLUMBING ------------------------- */
+let TOKEN = sessionStorage.getItem('iip_token') || '';
+let ME = null, CACHE = {};
+
+/* POST with text/plain avoids a CORS preflight, which Apps Script cannot answer. */
+let INFLIGHT = 0;
+function netStart(){ INFLIGHT++; const b=$('netbar');
+  b.style.opacity='1'; b.style.width = Math.min(88, 25 + INFLIGHT*12) + '%'; }
+function netEnd(){ INFLIGHT = Math.max(0, INFLIGHT-1); const b=$('netbar');
+  if(INFLIGHT===0){ b.style.width='100%'; setTimeout(()=>{ b.style.opacity='0';
+    setTimeout(()=>{ if(INFLIGHT===0) b.style.width='0'; },320); },160); } }
+
+/* Blocking overlay for actions that must complete before anything else happens. */
+function overlayOn(title, note){
+  $('busyTitle').textContent = title || 'Working...';
+  $('busyNote').textContent = note || 'Please wait a moment.';
+  $('busyWrap').style.display = 'flex';
+}
+function overlayOff(){ $('busyWrap').style.display = 'none'; }
+
+async function api(action, params = {}) {
+  if (!API_URL || API_URL.indexOf('PASTE_') === 0) {
+    throw new Error('The portal is not configured yet: API_URL is missing in portal.html.');
+  }
+  netStart();
+  try { return await apiCall_(action, params); } finally { netEnd(); }
+}
+
+async function apiCall_(action, params = {}) {
+  const payload = Object.assign({action, token: TOKEN}, params);
+  let json;
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST', redirect: 'follow',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    json = await r.json();
+  } catch (e) {
+    if (payload.payload && payload.payload.file) throw new Error('Upload failed. Check your connection and try again.');
+    json = await jsonp(payload);   // fallback for browsers that block the POST
+  }
+  if (!json || !json.ok) throw new Error((json && json.error) || 'Something went wrong.');
+  return json.data;
+}
+
+function jsonp(payload) {
+  return new Promise((resolve, reject) => {
+    const cb = 'iicb' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const t = setTimeout(() => { cleanup(); reject(new Error('The server did not respond. Please try again.')); }, 25000);
+    function cleanup(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = d => { cleanup(); resolve(d); };
+    s.onerror = () => { cleanup(); reject(new Error('Could not reach the server.')); };
+    s.src = API_URL + '?callback=' + cb + '&p=' + encodeURIComponent(JSON.stringify(payload));
+    document.body.appendChild(s);
+  });
+}
+
+/* ------------------------- UI HELPERS ------------------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg, kind='') {
+  const t = $('toast'); t.textContent = msg; t.className = kind; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', kind === 'err' ? 6500 : 3500);
+}
+function fmtDate(v){ if(!v) return '-'; const d=new Date(v); return isNaN(d)?String(v)
+  :d.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}); }
+function fmtDT(v){ if(!v) return '-'; const d=new Date(v); return isNaN(d)?String(v)
+  :d.toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+const statusPill = s => `<span class="pill ${s==='Approved'?'approved':s==='Needs Revision'?'revision':'pending'}">${esc(s||'Pending')}</span>`;
+const progPill = p => `<span class="pill ${p==='Completed'?'prog-done':p==='Partially Done'?'prog-part':'prog-wip'}">${esc(p||'Completed')}</span>`;
+const PROGRESS = ['In Progress','Partially Done','Completed'];
+let FILTER = {status:'',progress:'',submitterId:'',typeId:'',from:'',to:'',q:'',sort:'date_desc',page:1,pageSize:25};
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let PERIOD = 'all';
+const PERIODS = [['month','This month'],['30','Last 30 days'],['quarter','This quarter'],
+                 ['year','This year'],['all','All time']];
+function periodRange(key){
+  const now=new Date(), z=n=>String(n).padStart(2,'0');
+  const iso=d=>d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());
+  if(key==='month')   return {from:iso(new Date(now.getFullYear(),now.getMonth(),1)), to:iso(now)};
+  if(key==='30')      { const d=new Date(now); d.setDate(d.getDate()-30); return {from:iso(d),to:iso(now)}; }
+  if(key==='quarter') { const q=Math.floor(now.getMonth()/3)*3;
+                        return {from:iso(new Date(now.getFullYear(),q,1)), to:iso(now)}; }
+  if(key==='year')    return {from:iso(new Date(now.getFullYear(),0,1)), to:iso(now)};
+  return {from:'',to:''};
+}
+function periodBar(onchange){
+  return '<div class="period">' + PERIODS.map(([k,l])=>
+    `<button class="${PERIOD===k?'on':''}" onclick="${onchange}('${k}')">${l}</button>`).join('') + '</div>';
+}
+function monthLabel(k){ if(!k) return 'Undated'; const [y,m]=k.split('-'); return MONTH_NAMES[+m-1]+' '+y; }
+const isAdmin = () => ME && (ME.role === 'admin' || ME.role === 'superadmin');
+const isSuper = () => ME && ME.role === 'superadmin';
+function openModal(html){ $('modal').innerHTML = html; $('modalWrap').style.display='flex'; }
+function closeModal(){ $('modalWrap').style.display='none'; $('modal').innerHTML=''; }
+function busy(btn, on, label){ if(!btn) return; btn.disabled=on;
+  btn.innerHTML = on ? '<span class="spin"></span>' : label; }
+async function guard(fn){ try{ await fn(); }catch(e){
+  toast(e.message, 'err');
+  if(/sign in|session|deactivated|no longer exists/i.test(e.message)) forceLogout();
+}}
+function forceLogout(){ sessionStorage.removeItem('iip_token'); TOKEN=''; ME=null;
+  $('app').style.display='none'; $('login').style.display='flex'; }
+
+/* ------------------------- AUTH ------------------------- */
+async function doLogin(){
+  const btn=$('liBtn'), m=$('loginMsg'); m.className='msg';
+  const email=$('liEmail').value.trim(), pw=$('liPw').value;
+  if(!email||!pw){ m.className='msg err'; m.textContent='Please enter your email and password.'; return; }
+  busy(btn,true,'Sign in');
+  try{
+    const d = await api('login',{email,password:pw});
+    TOKEN = d.token; sessionStorage.setItem('iip_token',TOKEN); ME = d.user;
+    $('liPw').value='';
+    if(ME.mustChange){ $('loginForm').style.display='none'; $('changeForm').style.display='block'; m.className='msg'; }
+    else enterApp();
+  }catch(e){ m.className='msg err'; m.textContent=e.message; }
+  busy(btn,false,'Sign in');
+}
+
+async function doForcedChange(){
+  const btn=$('cpBtn'), m=$('loginMsg'); m.className='msg';
+  const o=$('cpOld').value, n=$('cpNew').value, n2=$('cpNew2').value;
+  if(n!==n2){ m.className='msg err'; m.textContent='The new passwords do not match.'; return; }
+  if(n.length<8){ m.className='msg err'; m.textContent='Use at least 8 characters.'; return; }
+  busy(btn,true,'Save and continue');
+  try{
+    const d = await api('changePassword',{currentPassword:o,newPassword:n});
+    TOKEN = d.token; sessionStorage.setItem('iip_token',TOKEN); ME = d.user;
+    $('changeForm').style.display='none'; $('loginForm').style.display='block';
+    ['cpOld','cpNew','cpNew2'].forEach(i=>$(i).value='');
+    enterApp(); toast('Password updated.','ok');
+  }catch(e){ m.className='msg err'; m.textContent=e.message; }
+  busy(btn,false,'Save and continue');
+}
+
+function doLogout(){
+  if(!confirm('Sign out of the portal?')) return;
+  overlayOn('Signing out', 'Ending your session safely.');
+  setTimeout(()=>{ overlayOff(); forceLogout(); toast('Signed out.'); }, 400);
+}
+
+/* ------------------------- SHELL ------------------------- */
+const TABS = [
+  {id:'dashboard',     label:'Dashboard'},
+  {id:'submissions',   label:'Submissions'},
+  {id:'announcements', label:'Announcements'},
+  {id:'requirements',  label:'Requirements', admin:true},
+  {id:'users',         label:'Accounts',     admin:true},
+  {id:'orgchart',      label:'Org Chart',    admin:true},
+  {id:'audit',         label:'Activity Log', super:true},
+  {id:'account',       label:'My Account'}
+];
+let TAB = 'dashboard';
+
+function enterApp(){
+  $('login').style.display='none'; $('app').style.display='block';
+  $('whoName').textContent = ME.name;
+  $('whoRole').textContent = (ME.position ? ME.position+' - ' : '') +
+    (ME.role==='superadmin'?'Super Administrator':ME.role==='admin'?'Administrator':'Staff');
+  $('tabs').innerHTML = TABS.filter(t => (!t.admin||isAdmin()) && (!t.super||isSuper()))
+    .map(t => `<button data-t="${t.id}" onclick="go('${t.id}')">${t.label}</button>`).join('');
+  go('dashboard');
+}
+
+function go(id){
+  TAB = id;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.t===id));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  $('p-'+id).classList.add('on');
+  render(id);
+}
+
+function render(id){
+  const el = $('p-'+id);
+  el.innerHTML = '<div class="empty">Loading...</div>';
+  guard(async () => {
+    if(id==='dashboard')      await viewDashboard(el);
+    if(id==='submissions')    await viewSubmissions(el);
+    if(id==='announcements')  await viewAnnouncements(el);
+    if(id==='requirements')   await viewRequirements(el);
+    if(id==='users')          await viewUsers(el);
+    if(id==='orgchart')       await viewOrg(el);
+    if(id==='audit')          await viewAudit(el);
+    if(id==='account')        await viewAccount(el);
+  });
+}
+
+/* ------------------------- DASHBOARD ------------------------- */
+function setPeriod(k){ PERIOD=k; render('dashboard'); }
+
+/* Period counts are derived from the submissions endpoint (which supports date
+   filtering) so no backend change is needed. Four small parallel calls. */
+async function periodCounts(){
+  const r = periodRange(PERIOD);
+  if(!r.from) return null;
+  const base = {from:r.from, to:r.to, pageSize:5};
+  const [all,pend,app,rev] = await Promise.all([
+    api('listSubmissions',{filter:base}),
+    api('listSubmissions',{filter:Object.assign({status:'Pending'},base)}),
+    api('listSubmissions',{filter:Object.assign({status:'Approved'},base)}),
+    api('listSubmissions',{filter:Object.assign({status:'Needs Revision'},base)})
+  ]);
+  return {all:all.total, pending:pend.total, approved:app.total, revision:rev.total};
+}
+function jumpTo(status){
+  FILTER = {status:status||'', progress:'', submitterId:'', typeId:'',
+    from:periodRange(PERIOD).from, to:periodRange(PERIOD).to, q:'',
+    sort:'date_desc', page:1, pageSize:25};
+  SUB_MODE='view'; go('submissions');
+}
+
+async function viewDashboard(el){
+  const [d, pc] = await Promise.all([api('dashboard'), periodCounts()]);
+  const label = (PERIODS.find(p=>p[0]===PERIOD)||[])[1];
+  if(d.role==='employee'){
+    el.innerHTML = `
+      <h2 class="pt">Welcome, ${esc(ME.name.split(' ')[0])}</h2>
+      <p class="ps">Your submissions${pc?' for '+esc(label).toLowerCase():' at a glance'}. Tap a card to see the list.</p>
+      ${periodBar('setPeriod')}
+      <div class="grid g4">
+        <div class="stat click" onclick="jumpTo('')"><div class="n">${pc?pc.all:d.mySubmissions}</div><div class="l">Submitted</div></div>
+        <div class="stat click" onclick="jumpTo('Pending')"><div class="n">${pc?pc.pending:d.myPending}</div><div class="l">Awaiting review</div></div>
+        <div class="stat click" onclick="jumpTo('Approved')"><div class="n">${pc?pc.approved:d.myApproved}</div><div class="l">Approved</div></div>
+        <div class="stat click" onclick="jumpTo('Needs Revision')"><div class="n">${pc?pc.revision:d.myRevision}</div><div class="l">Needs revision</div></div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="row"><b class="f-lex">Completion</b><span class="right">${d.completion}% of ${d.openTypes} requirement(s)</span></div>
+        <div class="bar" style="margin-top:10px;"><i style="width:${d.completion}%"></i></div>
+        ${d.outstanding.length ? `<div style="margin-top:14px;font-size:.85rem;">
+          <b>Still to submit:</b><ul style="margin:8px 0 0 18px;line-height:1.7;">
+          ${d.outstanding.map(o=>`<li>${esc(o.title)}${o.dueDate?` <span style="color:var(--ink3)">- due ${fmtDate(o.dueDate)}</span>`:''}</li>`).join('')}
+          </ul></div>` : '<div class="hint" style="margin-top:12px;">Everything assigned to you has been approved.</div>'}
+      </div>
+      <div class="grid g3" style="margin-top:16px">
+        <div class="stat"><div class="n">${d.inProgress||0}</div><div class="l">Marked in progress</div></div>
+        <div class="stat"><div class="n">${d.partial||0}</div><div class="l">Marked partially done</div></div>
+        <div class="stat"><div class="n">${d.completed||0}</div><div class="l">Marked completed</div></div>
+      </div>
+      ${(d.recent&&d.recent.length)?`<div class="card" style="margin-top:16px"><b class="f-lex">My recent submissions</b>
+        <div class="feed" style="margin-top:8px">${d.recent.map(r=>`<div class="row">
+          <span>${esc(r.typeTitle)}</span><span class="right">${progPill(r.progress)} ${statusPill(r.status)}
+          <span style="color:var(--ink3);font-size:.78rem;margin-left:6px">${fmtDT(r.submittedAt)}</span></span>
+        </div>`).join('')}</div></div>`:''}
+      <button class="btn" onclick="go('submissions')">Make a submission</button>`;
+    return;
+  }
+  el.innerHTML = `
+    <h2 class="pt">Dashboard</h2>
+    <p class="ps">Organization-wide overview${pc?' for '+esc(label).toLowerCase():''}. Tap a card to open the matching list.</p>
+    ${periodBar('setPeriod')}
+    <div class="grid g4">
+      <div class="stat"><div class="n">${d.totalUsers}</div><div class="l">Active accounts</div></div>
+      <div class="stat click" onclick="jumpTo('Pending')"><div class="n">${pc?pc.pending:d.pending}</div><div class="l">Awaiting review</div></div>
+      <div class="stat click" onclick="jumpTo('Approved')"><div class="n">${pc?pc.approved:d.approved}</div><div class="l">Approved</div></div>
+      <div class="stat click" onclick="jumpTo('Needs Revision')"><div class="n">${pc?pc.revision:d.revision}</div><div class="l">Needs revision</div></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="stat"><div class="n">${d.inProgress||0}</div><div class="l">Staff-marked in progress</div></div>
+      <div class="stat"><div class="n">${d.partial||0}</div><div class="l">Staff-marked partially done</div></div>
+      <div class="stat click" onclick="jumpTo('')"><div class="n">${pc?pc.all:d.totalSubmissions}</div><div class="l">${pc?'Submissions in period':'Total submissions'}</div></div>
+      <div class="stat click" onclick="go('orgchart')"><div class="n">${d.orgPeople||0}</div><div class="l">People on the org chart</div></div>
+    </div>
+    ${(d.recent&&d.recent.length)?`<div class="card" style="margin-top:16px"><b class="f-lex">Latest activity</b>
+      <div class="feed" style="margin-top:8px">${d.recent.map(r=>`<div class="row">
+        <span><b>${esc(r.submitterName)}</b> - ${esc(r.typeTitle)}</span>
+        <span class="right">${progPill(r.progress)} ${statusPill(r.status)}
+        <span style="color:var(--ink3);font-size:.78rem;margin-left:6px">${fmtDT(r.submittedAt)}</span></span>
+      </div>`).join('')}</div></div>`:''}
+    <div class="card" style="margin-top:16px;">
+      <b class="f-lex">Staff completion</b>
+      <div class="tw" style="margin-top:10px;"><table>
+        <tr><th>Name</th><th>Role</th><th>Submitted</th><th>Approved</th><th>Pending</th>
+          <th>In progress</th><th>Last activity</th><th style="width:150px">Completion</th></tr>
+        ${d.perUser.length ? d.perUser.map(u=>`<tr>
+          <td><b>${esc(u.name)}</b><div style="font-size:.76rem;color:var(--ink3)">${esc(u.email)}</div></td>
+          <td><span class="pill role">${esc(u.role)}</span></td>
+          <td>${u.submitted}</td><td>${u.approved}</td><td>${u.pending}</td>
+          <td>${(u.inProgress||0)+(u.partial||0)}</td>
+          <td style="white-space:nowrap;font-size:.8rem">${u.lastActivity?fmtDate(u.lastActivity):'-'}</td>
+          <td><div class="row"><div class="bar" style="flex:1"><i style="width:${u.completion}%"></i></div>
+            <span style="font-size:.78rem;min-width:34px;text-align:right">${u.completion}%</span></div>
+            <div style="font-size:.72rem;color:var(--ink3);margin-top:3px">${u.approved}/${u.required} requirement(s)</div></td>
+        </tr>`).join('') : '<tr><td colspan="8" class="empty">No staff accounts yet.</td></tr>'}
+      </table></div>
+    </div>`;
+}
+
+/* ------------------------- SUBMISSIONS ------------------------- */
+let SUB_MODE = 'view';        // 'view' | 'new'
+let SUB_ITEMS = [];           // accumulated rows for Load more
+function setSubMode(m){ SUB_MODE=m; render('submissions'); }
+
+async function viewSubmissions(el, keepFilters){
+  if(!keepFilters){ FILTER.page = 1; SUB_ITEMS = []; }
+  const [types, res, users] = await Promise.all([
+    api('listTypes'),
+    api('listSubmissions',{filter:FILTER}),
+    isAdmin() ? api('listUsers') : Promise.resolve([])
+  ]);
+  SUB_ITEMS = (FILTER.page > 1) ? SUB_ITEMS.concat(res.items) : res.items;
+  CACHE.types = types; CACHE.users = users;
+  const open = types.filter(t => t.status === 'Active');
+  const c = res.counts;
+
+  el.innerHTML = `
+    <h2 class="pt">Submissions</h2>
+    <p class="ps">${isAdmin() ? 'All staff submissions, newest first. Filter, search, then review.'
+      : 'Submit your requirements, mark your progress, and track review status.'}</p>
+
+    <div class="seg">
+      <button class="${SUB_MODE==='view'?'on':''}" onclick="setSubMode('view')">View submissions</button>
+      <button class="${SUB_MODE==='new'?'on':''}" onclick="setSubMode('new')">Make a submission</button>
+    </div>
+
+    <div class="card" id="newCard" style="display:${SUB_MODE==='new'?'block':'none'}">
+      <div class="row"><b class="f-lex">New submission</b></div>
+      <div id="newBody">
+      ${open.length ? `
+        <label>What are you submitting?</label>
+        <select id="sType" onchange="typeHint()">
+          <option value="">- choose -</option>
+          ${open.map(t=>`<option value="${esc(t.id)}" data-file="${t.requiresFile?1:0}">${esc(t.title)}</option>`).join('')}
+        </select>
+        <div class="hint" id="sHint"></div>
+        <label>Your progress on this output</label>
+        <select id="sProg">
+          <option value="Completed">Completed - this is my finished output</option>
+          <option value="Partially Done">Partially Done - part of the work is submitted</option>
+          <option value="In Progress">In Progress - still working on it</option>
+        </select>
+        <div class="hint">This is your own status. Your reviewer records Approved / Needs Revision separately.</div>
+        <label>Notes (optional)</label>
+        <textarea id="sNotes" placeholder="Anything the reviewer should know"></textarea>
+        <label>Attach a file (up to 1 MB)</label>
+        <input type="file" id="sFile" onchange="checkFile()">
+        <div class="hint" id="sFileHint">Larger than 1 MB? Upload it to Google Drive and paste the link below instead.</div>
+        <label>Or paste a Google Drive link</label>
+        <div class="row" style="gap:8px;flex-wrap:nowrap">
+          <input type="url" id="sLink" placeholder="https://drive.google.com/..." style="flex:1">
+          <button class="btn ghost sm" id="ckBtn" onclick="checkLink()" style="white-space:nowrap">Check link</button>
+        </div>
+        <div class="linkcheck" id="linkMsg"></div>
+        <div class="warnbox"><b>Before pasting a link:</b> open the file in Google Drive, click
+          <b>Share</b>, and set <b>General access</b> to <b>&ldquo;Anyone with the link&rdquo;</b> (Viewer).
+          Use <b>Check link</b> above to confirm your reviewer will be able to open it.</div>
+        <button class="btn" style="margin-top:16px;" id="sBtn" onclick="doSubmit()">Submit</button>
+      ` : '<div class="empty">There are no open requirements assigned to you right now.</div>'}
+      </div>
+    </div>
+
+    <div id="viewArea" style="display:${SUB_MODE==='view'?'block':'none'}">
+    <div class="chips">
+      ${chip('', 'All', c.all)}
+      ${chip('Pending','Awaiting review',c.pending)}
+      ${chip('Approved','Approved',c.approved)}
+      ${chip('Needs Revision','Needs revision',c.revision)}
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <div><label>Search</label><input id="fq" value="${esc(FILTER.q)}" placeholder="Name, requirement, notes"
+          onkeydown="if(event.key==='Enter')applyFilters()"></div>
+        <div><label>Progress</label><select id="fprog">
+          <option value="">Any</option>
+          ${PROGRESS.map(p=>`<option${FILTER.progress===p?' selected':''}>${p}</option>`).join('')}</select></div>
+        <div><label>Requirement</label><select id="ftype"><option value="">All</option>
+          ${types.map(t=>`<option value="${esc(t.id)}"${FILTER.typeId===t.id?' selected':''}>${esc(t.title)}</option>`).join('')}</select></div>
+        ${isAdmin()?`<div><label>Staff member</label><select id="fuser"><option value="">Everyone</option>
+          ${users.map(u=>`<option value="${esc(u.id)}"${FILTER.submitterId===u.id?' selected':''}>${esc(u.name)}</option>`).join('')}</select></div>`:''}
+        <div><label>From</label><input type="date" id="ffrom" value="${esc(FILTER.from)}"></div>
+        <div><label>To</label><input type="date" id="fto" value="${esc(FILTER.to)}"></div>
+        <div><label>Sort by</label><select id="fsort">
+          <option value="date_desc"${FILTER.sort==='date_desc'?' selected':''}>Newest first</option>
+          <option value="date_asc"${FILTER.sort==='date_asc'?' selected':''}>Oldest first</option>
+          <option value="name_asc"${FILTER.sort==='name_asc'?' selected':''}>Staff name</option>
+          <option value="type_asc"${FILTER.sort==='type_asc'?' selected':''}>Requirement</option>
+          <option value="status"${FILTER.sort==='status'?' selected':''}>Review status</option></select></div>
+        <div class="row"><button class="btn navy sm" onclick="applyFilters()">Apply</button>
+          <button class="btn ghost sm" onclick="clearFilters()">Clear</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><b class="f-lex">${isAdmin()?'All submissions':'My submissions'}</b>
+        <span class="right" style="font-size:.82rem;color:var(--ink3)">
+          Showing ${SUB_ITEMS.length} of ${res.total}${res.filtered?' (filtered)':''}</span></div>
+      <div class="tw" style="margin-top:10px;"><table>
+        <tr><th>Date</th>${isAdmin()?'<th>Staff</th>':''}<th>Requirement</th><th>File</th>
+          <th>Progress</th><th>Review</th><th></th></tr>
+        ${renderRows(SUB_ITEMS)}
+      </table></div>
+      ${res.page < res.pages ? `<div class="loadmore">
+        <button class="btn ghost" id="moreBtn" onclick="loadMore()">Load more
+          (${res.total - SUB_ITEMS.length} remaining)</button></div>` :
+        (SUB_ITEMS.length > FILTER.pageSize ? '<div class="loadmore"><span class="info" style="font-size:.8rem;color:var(--ink3)">End of list</span></div>' : '')}
+    </div>
+    </div>`;
+  typeHint();
+}
+
+function loadMore(){
+  FILTER.page++;
+  const b=$('moreBtn'); busy(b,true,'Load more');
+  guard(async()=>{ try{ await viewSubmissions($('p-submissions'),true); }
+    finally{ if($('moreBtn')) busy($('moreBtn'),false,'Load more'); } });
+}
+
+function chip(status,label,n){
+  return `<button class="chip${FILTER.status===status?' on':''}" onclick="setStatusChip('${status}')">${label} <b>${n}</b></button>`;
+}
+function setStatusChip(s){ FILTER.status=s; FILTER.page=1; SUB_ITEMS=[]; render('submissions'); }
+
+
+/* Rows are grouped under a month heading so long lists stay readable. */
+function renderRows(items){
+  if(!items.length) return `<tr><td colspan="${isAdmin()?7:6}" class="empty">No submissions match these filters.</td></tr>`;
+  const cols = isAdmin()?7:6;
+  let out='', lastMonth=null;
+  const grouped = (FILTER.sort==='date_desc'||FILTER.sort==='date_asc');
+  items.forEach(s=>{
+    if(grouped && s.month!==lastMonth){ lastMonth=s.month;
+      out += `<tr class="mrow"><td colspan="${cols}">${monthLabel(s.month)}</td></tr>`; }
+    const canEdit = s.status!=='Approved' && (isAdmin() || s.submitterEmail===ME.email);
+    out += `<tr>
+      <td style="white-space:nowrap">${fmtDT(s.submittedAt)}</td>
+      ${isAdmin()?`<td><b>${esc(s.submitterName)}</b><div style="font-size:.74rem;color:var(--ink3)">${esc(s.submitterEmail)}</div></td>`:''}
+      <td><b>${esc(s.typeTitle)}</b>${s.notes?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${esc(s.notes)}</div>`:''}</td>
+      <td>${s.fileUrl?`<a href="${esc(s.fileUrl)}" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">Open</a>
+          <div style="font-size:.72rem;color:var(--ink3)">${esc(s.fileSource||'')}</div>`:'<span style="color:var(--ink3)">-</span>'}</td>
+      <td>${canEdit
+        ? `<select onchange="setProgress('${esc(s.id)}',this.value)" style="padding:5px 8px;font-size:.8rem">
+             ${PROGRESS.map(p=>`<option${s.progress===p?' selected':''}>${p}</option>`).join('')}</select>`
+        : progPill(s.progress)}</td>
+      <td>${statusPill(s.status)}${s.reviewNotes?`<div style="font-size:.76rem;color:var(--ink3);margin-top:4px">${esc(s.reviewNotes)}</div>`:''}</td>
+      <td style="white-space:nowrap">
+        ${isAdmin()?`<button class="btn sm navy" onclick='reviewModal(${JSON.stringify(s)})'>Review</button>`:''}
+        ${canEdit?`<button class="btn sm ghost" onclick='editModal(${JSON.stringify(s)})'>Edit</button>`:''}
+        ${(isAdmin()||s.status==='Pending')?`<button class="btn sm ghost" onclick="delSub('${esc(s.id)}')">Withdraw</button>`:''}
+      </td></tr>`;
+  });
+  return out;
+}
+
+
+function applyFilters(){
+  FILTER.q=$('fq').value.trim(); FILTER.progress=$('fprog').value; FILTER.typeId=$('ftype').value;
+  if($('fuser')) FILTER.submitterId=$('fuser').value;
+  FILTER.from=$('ffrom').value; FILTER.to=$('fto').value; FILTER.sort=$('fsort').value;
+  FILTER.page=1; SUB_ITEMS=[];
+  guard(async()=>{ await viewSubmissions($('p-submissions'),true); });
+}
+function clearFilters(){
+  FILTER={status:'',progress:'',submitterId:'',typeId:'',from:'',to:'',q:'',sort:'date_desc',page:1,pageSize:25};
+  render('submissions');
+}
+function setProgress(id,progress){
+  guard(async()=>{ await api('setProgress',{id,progress}); toast('Progress updated.','ok');
+    FILTER.page=1; SUB_ITEMS=[]; await viewSubmissions($('p-submissions'),true); });
+}
+
+function typeHint(){
+  const sel=$('sType'); if(!sel) return;
+  const o = sel.selectedOptions[0];
+  $('sHint').textContent = (o && o.dataset.file === '1')
+    ? 'This requirement needs a file or a Google Drive link.' : '';
+}
+function checkFile(){
+  const f = $('sFile').files[0], h = $('sFileHint');
+  if(!f){ h.textContent='Larger than 1 MB? Upload it to Google Drive and paste the link below instead.';
+    h.style.color=''; return; }
+  if(f.size > 1024*1024){
+    h.textContent = `"${f.name}" is ${(f.size/1048576).toFixed(2)} MB - too large. Please use a Google Drive link instead.`;
+    h.style.color='var(--danger)'; $('sFile').value='';
+  } else { h.textContent = `${f.name} (${Math.round(f.size/1024)} KB) ready.`; h.style.color='var(--green)'; }
+}
+function checkLink(){
+  const link=$('sLink').value.trim(), m=$('linkMsg');
+  if(!link){ m.className='linkcheck'; m.textContent='Paste a Google Drive link first.'; return; }
+  busy($('ckBtn'),true,'Check link');
+  guard(async()=>{
+    try{ const r = await api('checkLink',{link});
+      m.className = 'linkcheck ' + (r.ok?'good':'bad'); m.textContent = r.message;
+      if(r.ok && r.url) $('sLink').value = r.url;
+    } catch(e){ m.className='linkcheck bad'; m.textContent=e.message; }
+    finally{ busy($('ckBtn'),false,'Check link'); }
+  });
+}
+
+function doSubmit(){
+  guard(async () => {
+    const typeId = $('sType').value;
+    if(!typeId) return toast('Please choose what you are submitting.','err');
+    const link = $('sLink').value.trim(), f = $('sFile').files[0];
+    const btn = $('sBtn'); busy(btn,true,'Submit');
+    overlayOn(f ? 'Uploading your file' : 'Sending your submission',
+              f ? 'Please keep this page open until it finishes.' : 'This only takes a moment.');
+    try{
+      const payload = {typeId, notes: $('sNotes').value.trim(), link, progress: $('sProg').value};
+      if(f){
+        if(f.size > 1024*1024) throw new Error('That file is larger than 1 MB. Please use a Google Drive link.');
+        payload.file = {name:f.name, mimeType:f.type||'application/octet-stream', bytes: await toB64(f)};
+      }
+      const r = await api('submit',{payload});
+      if(r && r.warning) toast(r.warning,'err'); else toast('Submitted successfully.','ok');
+      $('sNotes').value=''; $('sLink').value=''; $('sFile').value=''; $('linkMsg').textContent='';
+      SUB_MODE='view'; FILTER.page=1; SUB_ITEMS=[];
+      render('submissions');
+    } finally { overlayOff(); busy(btn,false,'Submit'); }
+  });
+}
+const toB64 = f => new Promise((res,rej)=>{ const r=new FileReader();
+  r.onload=()=>res(r.result.split(',')[1]); r.onerror=()=>rej(new Error('Could not read that file.'));
+  r.readAsDataURL(f); });
+
+function editModal(s){
+  openModal(`<h3>Edit submission</h3>
+    <p class="ps">${esc(s.typeTitle)} - submitted ${fmtDT(s.submittedAt)}</p>
+    <label>Progress</label><select id="edProg">
+      ${PROGRESS.map(p=>`<option${s.progress===p?' selected':''}>${p}</option>`).join('')}</select>
+    <label>Notes</label><textarea id="edNotes">${esc(s.notes||'')}</textarea>
+    <label>Replace the Google Drive link (optional)</label>
+    <input type="url" id="edLink" placeholder="${esc(s.fileUrl||'https://drive.google.com/...')}">
+    <div class="hint">Leave blank to keep the current file. Uploaded files cannot be replaced here - withdraw and submit again instead.</div>
+    ${s.status==='Needs Revision'?'<div class="warnbox">Saving changes puts this back in the review queue.</div>':''}
+    <div class="row" style="margin-top:18px"><button class="btn" id="edBtn" onclick="saveEdit('${esc(s.id)}')">Save changes</button>
+      <button class="btn ghost right" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveEdit(id){
+  guard(async()=>{
+    const data = {notes:$('edNotes').value, progress:$('edProg').value};
+    const link = $('edLink').value.trim(); if(link) data.link = link;
+    busy($('edBtn'),true,'Save changes'); overlayOn('Saving changes','Updating your submission.');
+    try{ const r = await api('updateSubmission',{id,data});
+      closeModal(); if(r && r.warning) toast(r.warning,'err'); else toast('Saved.','ok');
+      FILTER.page=1; SUB_ITEMS=[]; await viewSubmissions($('p-submissions'),true);
+    } finally{ overlayOff(); busy($('edBtn'),false,'Save changes'); }
+  });
+}
+
+function reviewModal(s){
+  openModal(`<h3>Review submission</h3>
+    <p class="ps">${esc(s.submitterName)} - ${esc(s.typeTitle)}</p>
+    <div class="row" style="margin-bottom:10px">Staff progress: ${progPill(s.progress)}</div>
+    ${s.progress!=='Completed'?'<div class="warnbox">The staff member has marked this as not yet finished.</div>':''}
+    ${s.notes?`<div class="card" style="background:var(--cream);box-shadow:none"><b style="font-size:.78rem">Staff notes</b>
+      <div style="font-size:.86rem;margin-top:4px;white-space:pre-wrap">${esc(s.notes)}</div></div>`:''}
+    ${s.fileUrl?`<a class="btn ghost sm" href="${esc(s.fileUrl)}" target="_blank" rel="noopener">Open attachment</a>`:''}
+    <label>Review notes (shown to the staff member)</label>
+    <textarea id="rvNotes" placeholder="Optional for approval, recommended when asking for a revision">${esc(s.reviewNotes||'')}</textarea>
+    <div class="row" style="margin-top:18px">
+      <button class="btn green" onclick="doReview('${esc(s.id)}','Approved')">Approve</button>
+      <button class="btn" onclick="doReview('${esc(s.id)}','Needs Revision')">Needs revision</button>
+      <button class="btn ghost right" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+function doReview(id,status){
+  guard(async()=>{
+    overlayOn(status==='Approved'?'Approving submission':'Sending it back for revision','Saving the decision.');
+    try{ await api('reviewSubmission',{id,status,notes:$('rvNotes').value.trim()}); } finally{ overlayOff(); }
+    closeModal(); toast('Review saved.','ok');
+    FILTER.page=1; SUB_ITEMS=[]; await viewSubmissions($('p-submissions'),true); });
+}
+function delSub(id){
+  if(!confirm('Withdraw this submission? Any file uploaded with it will also be removed.')) return;
+  guard(async()=>{ overlayOn('Withdrawing submission','Removing the record and any uploaded file.');
+    try{ await api('deleteSubmission',{id}); } finally{ overlayOff(); }
+    toast('Withdrawn.','ok');
+    FILTER.page=1; SUB_ITEMS=[]; await viewSubmissions($('p-submissions'),true); });
+}
+
+/* ------------------------- ANNOUNCEMENTS ------------------------- */
+let ANN_ALL = [], ANN_SHOW = 5, ANN_Q = '', ANN_PERIOD = 'all';
+function annPeriod(k){ ANN_PERIOD=k; ANN_SHOW=5; renderAnnList(); }
+function annSearch(){ ANN_Q=$('annQ').value.trim().toLowerCase(); ANN_SHOW=5; renderAnnList(); }
+function annMore(){ ANN_SHOW+=5; renderAnnList(); }
+
+function annFiltered(){
+  const r = periodRange(ANN_PERIOD);
+  const from = r.from?new Date(r.from+'T00:00:00'):null;
+  return ANN_ALL.filter(a=>{
+    if(from && new Date(a.createdAt) < from) return false;
+    if(ANN_Q && (a.title+' '+a.body+' '+a.authorName).toLowerCase().indexOf(ANN_Q)===-1) return false;
+    return true;
+  });
+}
+function renderAnnList(){
+  const list = annFiltered(), shown = list.slice(0, ANN_SHOW);
+  $('annList').innerHTML = shown.length ? shown.map(a=>`<div class="item">
+      <div class="row"><h4>${a.pinned?'<span class="pill gold" style="margin-right:6px">Pinned</span>':''}${esc(a.title)}</h4>
+        ${a.audience==='Admins'?'<span class="pill role">Admins only</span>':''}
+        ${isAdmin()?`<span class="right"><button class="btn sm ghost" onclick='annModal(${JSON.stringify(a)})'>Edit</button>
+          <button class="btn sm ghost" onclick="delAnn('${esc(a.id)}')">Delete</button></span>`:''}</div>
+      <div class="meta">${esc(a.authorName)} - ${fmtDT(a.createdAt)}${a.updatedAt?' (edited)':''}</div>
+      <div class="body">${esc(a.body)}</div></div>`).join('')
+    : '<div class="card"><div class="empty">No announcements match.</div></div>';
+  $('annMore').innerHTML = (list.length > ANN_SHOW)
+    ? `<button class="btn ghost" onclick="annMore()">Load more (${list.length-ANN_SHOW} older)</button>` : '';
+  $('annCount').textContent = `Showing ${shown.length} of ${list.length}`;
+}
+
+async function viewAnnouncements(el){
+  ANN_ALL = await api('listAnnouncements');
+  ANN_SHOW = 5;
+  el.innerHTML = `
+    <div class="row"><div><h2 class="pt">Announcements</h2><p class="ps">News and reminders for the team.</p></div>
+      ${isAdmin()?`<button class="btn right" onclick="annModal()">New announcement</button>`:''}</div>
+    ${(PERIODS.map(([k,l])=>`<button class="${ANN_PERIOD===k?'on':''}" onclick="annPeriod('${k}')">${l}</button>`).join('')
+      ? '<div class="period">'+PERIODS.map(([k,l])=>`<button class="${ANN_PERIOD===k?'on':''}" onclick="annPeriod('${k}')">${l}</button>`).join('')+'</div>' : '')}
+    <div class="card" style="padding:12px 18px"><div class="row">
+      <input id="annQ" placeholder="Search announcements" style="max-width:320px"
+        value="${esc(ANN_Q)}" oninput="annSearch()">
+      <span class="right" style="font-size:.82rem;color:var(--ink3)" id="annCount"></span></div></div>
+    <div id="annList"></div>
+    <div class="loadmore" id="annMore"></div>`;
+  renderAnnList();
+}
+
+function annModal(a){
+  a = a || {};
+  openModal(`<h3>${a.id?'Edit':'New'} announcement</h3>
+    <label>Title</label><input id="anTitle" value="${esc(a.title||'')}">
+    <label>Message</label><textarea id="anBody" style="min-height:120px">${esc(a.body||'')}</textarea>
+    <label>Audience</label>
+    <select id="anAud"><option value="All"${a.audience!=='Admins'?' selected':''}>Everyone</option>
+      <option value="Admins"${a.audience==='Admins'?' selected':''}>Administrators only</option></select>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;color:var(--ink);font-size:.9rem;font-weight:500">
+      <input type="checkbox" id="anPin" style="width:auto" ${a.pinned?'checked':''}> Pin to the top</label>
+    <div class="row" style="margin-top:18px"><button class="btn" id="anBtn" onclick="saveAnn('${esc(a.id||'')}')">Save</button>
+      <button class="btn ghost right" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveAnn(id){
+  guard(async()=>{
+    const data = {title:$('anTitle').value.trim(), body:$('anBody').value,
+      audience:$('anAud').value, pinned:$('anPin').checked};
+    if(!data.title) return toast('Please enter a title.','err');
+    busy($('anBtn'),true,'Save'); overlayOn('Posting announcement','Publishing to the team.');
+    try{ await api(id?'updateAnnouncement':'createAnnouncement', id?{id,data}:{data});
+      closeModal(); toast('Saved.','ok'); render('announcements'); }
+    finally{ overlayOff(); busy($('anBtn'),false,'Save'); }
+  });
+}
+function delAnn(id){
+  if(!confirm('Delete this announcement?')) return;
+  guard(async()=>{ await api('deleteAnnouncement',{id}); toast('Deleted.','ok'); render('announcements'); });
+}
+
+/* ------------------------- REQUIREMENTS ------------------------- */
+async function viewRequirements(el){
+  const [list, users] = await Promise.all([api('listTypes'), api('listUsers')]);
+  CACHE.users = users;
+  el.innerHTML = `
+    <div class="row"><div><h2 class="pt">Requirements</h2>
+      <p class="ps">What staff are asked to submit. Assign to everyone or to specific people.</p></div>
+      <button class="btn right" onclick="typeModal()">New requirement</button></div>
+    <div class="card"><div class="tw"><table>
+      <tr><th>Title</th><th>Frequency</th><th>Due</th><th>Assigned to</th><th>File</th><th>Status</th><th></th></tr>
+      ${list.length ? list.map(t=>`<tr>
+        <td><b>${esc(t.title)}</b>${t.description?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${esc(t.description)}</div>`:''}</td>
+        <td>${esc(t.frequency||'-')}</td><td>${t.dueDate?fmtDate(t.dueDate):'-'}</td>
+        <td style="font-size:.8rem">${String(t.assignedTo||'All').toLowerCase()==='all'
+          ? '<span class="pill gold">Everyone</span>'
+          : String(t.assignedTo).split(/[,;]/).length + ' selected'}</td>
+        <td>${t.requiresFile?'Required':'Optional'}</td>
+        <td><span class="pill ${t.status==='Active'?'approved':'off'}">${esc(t.status)}</span></td>
+        <td style="white-space:nowrap"><button class="btn sm ghost" onclick='typeModal(${JSON.stringify(t)})'>Edit</button>
+          <button class="btn sm ghost" onclick="delType('${esc(t.id)}')">Delete</button></td></tr>`).join('')
+      : '<tr><td colspan="7" class="empty">No requirements yet. Create one so staff have something to submit.</td></tr>'}
+    </table></div></div>`;
+}
+function typeModal(t){
+  t = t || {};
+  openModal(`<h3>${t.id?'Edit':'New'} requirement</h3>
+    <label>Title</label><input id="tyTitle" value="${esc(t.title||'')}">
+    <label>Description</label><textarea id="tyDesc">${esc(t.description||'')}</textarea>
+    <div class="grid g2">
+      <div><label>Frequency</label><select id="tyFreq">
+        ${['One-time','Daily','Weekly','Monthly','Quarterly','Annually'].map(f=>
+          `<option${t.frequency===f?' selected':''}>${f}</option>`).join('')}</select></div>
+      <div><label>Due date</label><input type="date" id="tyDue" value="${t.dueDate?new Date(t.dueDate).toISOString().slice(0,10):''}"></div>
+    </div>
+    <label>Assigned to</label>
+    <div class="pickbox">
+      <div class="picked" id="pkPicked"></div>
+      <input id="pkSearch" placeholder="Type a name or email to assign..." oninput="pkFilter()"
+        onfocus="pkFilter()" autocomplete="off">
+      <div class="suggest" id="pkList"></div>
+    </div>
+    <div class="hint">Leave empty to assign to <b>everyone</b>. Add specific people to restrict it to them only.</div>
+    <input type="hidden" id="tyTo" value="${esc(t.assignedTo||'All')}">
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;color:var(--ink);font-size:.9rem;font-weight:500">
+      <input type="checkbox" id="tyFile" style="width:auto" ${t.requiresFile?'checked':''}> A file or Drive link is required</label>
+    ${t.id?`<label>Status</label><select id="tyStatus">
+      <option value="Active"${t.status==='Active'?' selected':''}>Active</option>
+      <option value="Archived"${t.status==='Archived'?' selected':''}>Archived</option></select>`:''}
+    <div class="row" style="margin-top:18px"><button class="btn" id="tyBtn" onclick="saveType('${esc(t.id||'')}')">Save</button>
+      <button class="btn ghost right" onclick="closeModal()">Cancel</button></div>`);
+  pkInit(t.assignedTo);
+}
+/* ---- assignment picker ---- */
+let PICKED = [];
+function pkInit(assigned){
+  const raw = String(assigned||'All').trim();
+  PICKED = (!raw || raw.toLowerCase()==='all') ? []
+    : raw.split(/[,;]/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+  pkRender(); pkFilter();
+}
+function pkRender(){
+  const box=$('pkPicked'); if(!box) return;
+  box.innerHTML = PICKED.length
+    ? PICKED.map(e=>{
+        const u=(CACHE.users||[]).find(x=>String(x.email).toLowerCase()===e);
+        return `<span class="tag">${esc(u?u.name:e)}<button onclick="pkRemove('${esc(e)}')" title="Remove">&times;</button></span>`;
+      }).join('')
+    : '<span class="tag" style="background:var(--gold)">Everyone</span>';
+  $('tyTo').value = PICKED.length ? PICKED.join(', ') : 'All';
+}
+function pkRemove(e){ PICKED = PICKED.filter(x=>x!==e); pkRender(); pkFilter(); }
+function pkAdd(e){ e=String(e).toLowerCase();
+  if(PICKED.indexOf(e)===-1) PICKED.push(e);
+  $('pkSearch').value=''; pkRender(); pkFilter(); }
+function pkFilter(){
+  const q=($('pkSearch').value||'').trim().toLowerCase();
+  const avail=(CACHE.users||[]).filter(u=>u.active!==false &&
+    PICKED.indexOf(String(u.email).toLowerCase())===-1 &&
+    (!q || (u.name+' '+u.email+' '+(u.position||'')).toLowerCase().indexOf(q)>-1));
+  $('pkList').innerHTML = avail.length
+    ? avail.slice(0,25).map(u=>`<div onclick="pkAdd('${esc(u.email)}')">
+        ${esc(u.name)}<small>${esc(u.email)}${u.position?' - '+esc(u.position):''}</small></div>`).join('')
+    : `<div style="color:var(--ink3);cursor:default">${q?'No matching staff.':'All staff already assigned.'}</div>`;
+}
+
+function saveType(id){
+  guard(async()=>{
+    const data = {title:$('tyTitle').value.trim(), description:$('tyDesc').value,
+      frequency:$('tyFreq').value, dueDate:$('tyDue').value,
+      assignedTo:$('tyTo').value.trim()||'All', requiresFile:$('tyFile').checked};
+    if($('tyStatus')) data.status = $('tyStatus').value;
+    if(!data.title) return toast('Please enter a title.','err');
+    busy($('tyBtn'),true,'Save'); overlayOn('Saving requirement','Updating the list for staff.');
+    try{ await api(id?'updateType':'createType', id?{id,data}:{data});
+      closeModal(); toast('Saved.','ok'); render('requirements'); }
+    finally{ overlayOff(); busy($('tyBtn'),false,'Save'); }
+  });
+}
+function delType(id){
+  if(!confirm('Delete this requirement? If staff have already submitted for it, it will be archived instead so their records are kept.')) return;
+  guard(async()=>{ const r = await api('deleteType',{id});
+    toast(r && r.archived ? r.message : 'Deleted.', 'ok'); render('requirements'); });
+}
+
+/* ------------------------- ACCOUNTS ------------------------- */
+async function viewUsers(el){
+  const list = await api('listUsers');
+  el.innerHTML = `
+    <div class="row"><div><h2 class="pt">Accounts</h2>
+      <p class="ps">${isSuper() ? 'Create and manage staff accounts. New accounts must use an @ina-inakay.com email.'
+        : 'Staff accounts. Only the super administrator can make changes.'}</p></div>
+      <span class="right" style="display:flex;gap:8px">
+        <button class="btn ghost sm" onclick="go('orgchart')">Manage Organizational Chart</button>
+        ${isSuper()?`<button class="btn" onclick="userModal()">New account</button>`:''}</span></div>
+    <div class="card" style="padding:12px 18px"><div class="row">
+      <input id="uq" placeholder="Search name, email or position" style="max-width:320px"
+        oninput="filterUsers()"><span class="right" style="font-size:.82rem;color:var(--ink3)"
+        id="uCount">${list.length} account(s)</span></div></div>
+    <div class="card"><div class="tw"><table id="uTable">
+      <tr><th>Name</th><th>Role</th><th>Status</th><th>Last sign-in</th>${isSuper()?'<th></th>':''}</tr>
+      ${list.map(u=>`<tr data-s="${esc((u.name+' '+u.email+' '+(u.position||'')).toLowerCase())}">
+        <td><b>${esc(u.name)}</b><div style="font-size:.76rem;color:var(--ink3)">${esc(u.email)}</div>
+          ${u.position?`<div style="font-size:.74rem;color:var(--ink3)">${esc(u.position)}</div>`:''}</td>
+        <td><span class="pill role">${u.role==='superadmin'?'Super Admin':u.role==='admin'?'Admin':'Staff'}</span></td>
+        <td><span class="pill ${u.active?'approved':'off'}">${u.active?'Active':'Inactive'}</span>
+          ${u.mustChange?'<div style="font-size:.72rem;color:var(--amber);margin-top:3px">Must set password</div>':''}
+          ${u.locked?'<div style="font-size:.72rem;color:var(--danger);margin-top:3px">Locked</div>':''}</td>
+        <td style="font-size:.8rem">${u.lastLogin?fmtDT(u.lastLogin):'Never'}</td>
+        ${isSuper()?`<td style="white-space:nowrap">
+          <button class="btn sm ghost" onclick='userModal(${JSON.stringify(u)})'>Edit</button>
+          <button class="btn sm ghost" onclick="resetPw('${esc(u.id)}','${esc(u.name)}')">Reset password</button>
+          <button class="btn sm ghost" onclick="toggleUser('${esc(u.id)}',${u.active?'false':'true'})">${u.active?'Deactivate':'Reactivate'}</button>
+        </td>`:''}</tr>`).join('')}
+    </table></div></div>`;
+}
+function userModal(u){
+  u = u || {};
+  openModal(`<h3>${u.id?'Edit account':'New account'}</h3>
+    <label>Email</label>
+    <input id="usEmail" type="email" value="${esc(u.email||'')}" placeholder="name@ina-inakay.com">
+    <div class="hint">Must be an @ina-inakay.com address.${u.id?' Changing it updates their sign-in and all past records.':''}</div>
+    <label>Full name</label><input id="usName" value="${esc(u.name||'')}">
+    <label>Position</label><input id="usPos" value="${esc(u.position||'')}">
+    <label>Role</label><select id="usRole">
+      <option value="employee"${u.role==='employee'||!u.role?' selected':''}>Staff - submits requirements</option>
+      <option value="admin"${u.role==='admin'?' selected':''}>Administrator - reviews and manages content</option>
+      <option value="superadmin"${u.role==='superadmin'?' selected':''}>Super Administrator - full control</option>
+    </select>
+    ${u.id?'':'<div class="warnbox">A temporary password will be generated. Share it privately; the person must change it when they first sign in.</div>'}
+    <div class="row" style="margin-top:18px"><button class="btn" id="usBtn" onclick="saveUser('${esc(u.id||'')}')">Save</button>
+      ${u.id?`<button class="btn danger" onclick="delUser('${esc(u.id)}','${esc(u.name)}')">Delete</button>`:''}
+      <button class="btn ghost right" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveUser(id){
+  guard(async()=>{
+    const data = {name:$('usName').value.trim(), position:$('usPos').value.trim(),
+      role:$('usRole').value, email:$('usEmail').value.trim()};
+    if(!data.name) return toast('Please enter a full name.','err');
+    if(!id && !data.email) return toast('Please enter an email address.','err');
+    busy($('usBtn'),true,'Save');
+    overlayOn(id?'Saving account':'Creating account', id?'Updating the record.':'Generating a temporary password.');
+    try{
+      if(id){ await api('updateUser',{id,data}); closeModal(); toast('Account updated.','ok'); }
+      else{ const r = await api('createUser',{data}); credsModal(r.email, r.tempPassword, 'Account created'); }
+      render('users');
+    } finally { overlayOff(); busy($('usBtn'),false,'Save'); }
+  });
+}
+function credsModal(email, pw, title){
+  openModal(`<h3>${esc(title)}</h3>
+    <p class="ps">Give these details to the staff member privately. They will be asked to set their own password at first sign-in.</p>
+    <div class="card" style="background:var(--cream);box-shadow:none">
+      <div style="font-size:.78rem;color:var(--ink3)">EMAIL</div><b>${esc(email)}</b>
+      <div style="font-size:.78rem;color:var(--ink3);margin-top:10px">TEMPORARY PASSWORD</div>
+      <b style="font-size:1.25rem;letter-spacing:.06em;font-family:Lexend">${esc(pw)}</b></div>
+    <div class="warnbox">This password is shown only once. Copy it now.</div>
+    <button class="btn" style="margin-top:16px" onclick="navigator.clipboard&&navigator.clipboard.writeText('${esc(pw)}');toast('Copied.','ok')">Copy password</button>
+    <button class="btn ghost right" style="margin-top:16px" onclick="closeModal()">Done</button>`);
+}
+function resetPw(id,name){
+  if(!confirm('Reset the password for '+name+'? Their current password will stop working immediately.')) return;
+  guard(async()=>{ overlayOn('Resetting password','Generating a new temporary password.');
+    let r; try{ r = await api('resetPassword',{id}); } finally{ overlayOff(); }
+    credsModal(r.email, r.tempPassword, 'Password reset'); render('users'); });
+}
+function toggleUser(id,active){
+  guard(async()=>{ overlayOn(active?'Reactivating account':'Deactivating account','Applying the change.');
+    try{ await api('setUserActive',{id,active}); } finally{ overlayOff(); }
+    toast('Account updated.','ok'); render('users'); });
+}
+function delUser(id,name){
+  if(!confirm('Permanently delete the account for '+name+'?\n\nDeactivating is usually safer - it keeps their records and stops their access immediately.')) return;
+  guard(async()=>{
+    try{
+      await api('deleteUser',{id});
+      closeModal(); toast('Account deleted.','ok'); render('users');
+    }catch(e){
+      if(/Deactivate it instead/i.test(e.message)){
+        if(confirm(name+' has submission records.\n\nOK = delete the account AND all their submissions permanently.\nCancel = keep everything (deactivate instead).')){
+          await api('deleteUser',{id,force:true});
+          closeModal(); toast('Account and records deleted.','ok'); render('users');
+        }
+      } else throw e;
+    }
+  });
+}
+function filterUsers(){
+  const q=$('uq').value.trim().toLowerCase();
+  let n=0;
+  document.querySelectorAll('#uTable tr[data-s]').forEach(tr=>{
+    const hit = !q || tr.dataset.s.indexOf(q)>-1;
+    tr.style.display = hit?'':'none'; if(hit) n++;
+  });
+  $('uCount').textContent = n+' account(s)';
+}
+
+
+/* ======================= ORGANIZATIONAL CHART ======================= */
+let ORG=null, ORG_DIRTY=false;
+
+function orgBlank(){return{levels:[],departments:[],departmentsLabel:'Departments',note:''};}
+function orgTouch(){ORG_DIRTY=true;const b=$('orgSaveBtn');if(b){b.disabled=false;
+  b.textContent='Save chart';}const l=$('orgState');if(l){l.textContent='Unsaved changes';
+  l.style.color='var(--amber)';l.style.fontWeight='700';}}
+function orgSaved(msg){ORG_DIRTY=false;const l=$('orgState');if(l){l.textContent=msg||'All changes saved';
+  l.style.color='var(--ink3)';l.style.fontWeight='400';}}
+const oid=p=>p+Math.random().toString(36).slice(2,8);
+
+async function viewOrg(el){
+  const d = await api('orgGet');
+  ORG = (d && (d.levels||d.departments)) ? d : orgBlank();
+  if(!ORG.levels) ORG.levels=[];
+  if(!ORG.departments) ORG.departments=[];
+  if(!ORG.departmentsLabel) ORG.departmentsLabel='Departments';
+  el.innerHTML=`
+    <div class="row"><div><h2 class="pt">Organizational Chart</h2>
+      <p class="ps">Build the chart here. What you save appears on the public
+        Organizational Chart page of the website.</p></div>
+      <span class="right" style="font-size:.82rem;color:var(--ink3)" id="orgState">All changes saved</span></div>
+    <div id="orgArea"></div>
+    <div class="org-bar">
+      <button class="btn navy" id="orgSaveBtn" onclick="orgSave()" disabled>Save chart</button>
+      <button class="btn ghost sm" onclick="orgAddLevel()">Add a level</button>
+      <button class="btn ghost sm" onclick="orgAddDept()">Add a department</button>
+      <span class="right muted" id="orgCount"></span>
+    </div>`;
+  orgPaint(); orgSaved();
+}
+
+function orgCountPeople(){
+  let n=0;
+  ORG.levels.forEach(L=>n+=(L.people||[]).length);
+  ORG.departments.forEach(d=>{n+=(d.heads||[]).length;
+    (d.groups||[]).forEach(g=>n+=(g.members||[]).length);});
+  return n;
+}
+
+function orgPerson(p,path,i,total){
+  const src=p.photo||'';
+  return `<div class="org-p">
+    <img src="${src?esc(src):''}" alt="" onerror="this.style.visibility='hidden'">
+    <div class="f">
+      <input value="${esc(p.name||'')}" placeholder="Full name"
+        oninput="orgSet('${path}',${i},'name',this.value)">
+      <input value="${esc(p.role||'')}" placeholder="Position / title"
+        oninput="orgSet('${path}',${i},'role',this.value)">
+    </div>
+    <div class="t">
+      <button onclick="orgMove('${path}',${i},-1)" ${i===0?'disabled':''} title="Move up">&#9650;</button>
+      <button onclick="orgMove('${path}',${i},1)" ${i===total-1?'disabled':''} title="Move down">&#9660;</button>
+      <button onclick="orgPhoto('${path}',${i})" title="Upload photo">&#128247;</button>
+      <button class="del" onclick="orgDelPerson('${path}',${i})" title="Remove">&#10005;</button>
+    </div></div>`;
+}
+
+function orgPaint(){
+  let h='';
+  if(!ORG.levels.length && !ORG.departments.length){
+    h=`<div class="org-empty"><b>The chart is empty.</b><br><br>
+      Start by adding a <b>level</b> — for example &ldquo;Board of Trustees&rdquo; or
+      &ldquo;Executive Director&rdquo;. Levels stack from top to bottom.<br>
+      Then add <b>departments</b>, which appear side by side underneath.</div>`;
+  }
+  ORG.levels.forEach((L,li)=>{
+    h+=`<div class="org-box level">
+      <div class="org-hd">
+        <span class="pill gold">Level ${li+1}</span>
+        <input value="${esc(L.label||'')}" placeholder="Level name, e.g. Board of Trustees"
+          oninput="ORG.levels[${li}].label=this.value;orgTouch()">
+        <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;
+          letter-spacing:0;color:var(--ink3);font-size:.8rem;font-weight:500">
+          <input type="checkbox" style="width:auto" ${L.lead?'checked':''}
+            onchange="ORG.levels[${li}].lead=this.checked;orgTouch();orgPaint()"> Feature as single highlight</label>
+        <span class="right" style="display:flex;gap:5px">
+          <button class="btn ghost sm" onclick="orgMoveLevel(${li},-1)" ${li===0?'disabled':''}>&#9650;</button>
+          <button class="btn ghost sm" onclick="orgMoveLevel(${li},1)" ${li===ORG.levels.length-1?'disabled':''}>&#9660;</button>
+          <button class="btn ghost sm" onclick="orgDelLevel(${li})">Remove level</button></span>
+      </div>
+      ${(L.people||[]).map((p,i)=>orgPerson(p,'L'+li,i,L.people.length)).join('')
+        ||'<div class="muted" style="padding:6px 2px">Nobody in this level yet.</div>'}
+      <button class="btn ghost sm" style="margin-top:6px" onclick="orgAddPerson('L${li}')">Add person</button>
+    </div>`;
+  });
+  if(ORG.departments.length){
+    h+=`<div class="org-hd" style="margin-top:6px">
+      <input value="${esc(ORG.departmentsLabel||'Departments')}" placeholder="Heading above the departments"
+        oninput="ORG.departmentsLabel=this.value;orgTouch()" style="max-width:320px"></div>`;
+  }
+  ORG.departments.forEach((d,di)=>{
+    h+=`<div class="org-box dept">
+      <div class="org-hd">
+        <span class="pill role">Department ${di+1}</span>
+        <input value="${esc(d.title||'')}" placeholder="Department name"
+          oninput="ORG.departments[${di}].title=this.value;orgTouch()">
+        <input value="${esc(d.kicker||'')}" placeholder="Small label above (optional)"
+          style="max-width:200px;font-weight:400;font-size:.84rem"
+          oninput="ORG.departments[${di}].kicker=this.value;orgTouch()">
+        <span class="right" style="display:flex;gap:5px">
+          <button class="btn ghost sm" onclick="orgMoveDept(${di},-1)" ${di===0?'disabled':''}>&#9664;</button>
+          <button class="btn ghost sm" onclick="orgMoveDept(${di},1)" ${di===ORG.departments.length-1?'disabled':''}>&#9654;</button>
+          <button class="btn ghost sm" onclick="orgDelDept(${di})">Remove</button></span>
+      </div>
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        color:var(--red);margin:4px 0 6px">Department head(s)</div>
+      ${(d.heads||[]).map((p,i)=>orgPerson(p,'H'+di,i,d.heads.length)).join('')
+        ||'<div class="muted" style="padding:4px 2px">No head assigned yet.</div>'}
+      <button class="btn ghost sm" onclick="orgAddPerson('H${di}')">Add head</button>
+      ${(d.groups||[]).map((g,gi)=>`<div class="org-grp">
+        <div class="org-hd">
+          <input value="${esc(g.label||'')}" placeholder="Group name (optional)"
+            style="max-width:240px;font-size:.85rem"
+            oninput="ORG.departments[${di}].groups[${gi}].label=this.value;orgTouch()">
+          <span class="right"><button class="btn ghost sm" onclick="orgDelGroup(${di},${gi})">Remove group</button></span>
+        </div>
+        ${(g.members||[]).map((p,i)=>orgPerson(p,'M'+di+'_'+gi,i,g.members.length)).join('')
+          ||'<div class="muted" style="padding:4px 2px">Nobody in this group yet.</div>'}
+        <button class="btn ghost sm" onclick="orgAddPerson('M${di}_${gi}')">Add person</button>
+      </div>`).join('')}
+      <button class="btn ghost sm" style="margin-top:6px" onclick="orgAddGroup(${di})">Add a group</button>
+    </div>`;
+  });
+  $('orgArea').innerHTML=h;
+  const c=$('orgCount'); if(c) c.textContent=orgCountPeople()+' people in the chart';
+}
+
+/* path formats: L<i> = level, H<i> = dept heads, M<d>_<g> = dept group members */
+/* Resolves an editor path to the array it points at.
+   Returns an empty array rather than throwing if a stale button is clicked
+   after the underlying item has been removed. */
+function orgList(path){
+  try{
+    if(path[0]==='L'){const L=ORG.levels[+path.slice(1)];return (L&&L.people)||[];}
+    if(path[0]==='H'){const D=ORG.departments[+path.slice(1)];return (D&&D.heads)||[];}
+    const p=path.slice(1).split('_');
+    const D=ORG.departments[+p[0]];
+    const G=D&&D.groups&&D.groups[+p[1]];
+    return (G&&G.members)||[];
+  }catch(e){ return []; }
+}
+function orgSet(path,i,f,v){orgList(path)[i][f]=v;orgTouch();}
+function orgMove(path,i,d){const a=orgList(path),j=i+d;if(j<0||j>=a.length)return;
+  const x=a[i];a[i]=a[j];a[j]=x;orgTouch();orgPaint();}
+function orgDelPerson(path,i){const a=orgList(path);
+  if(a[i].name&&!confirm('Remove '+a[i].name+' from the chart?'))return;
+  a.splice(i,1);orgTouch();orgPaint();}
+function orgAddPerson(path){orgList(path).push({name:'',role:'',photo:''});orgTouch();orgPaint();}
+function orgAddLevel(){ORG.levels.push({id:oid('L'),label:'',lead:false,people:[]});orgTouch();orgPaint();}
+function orgDelLevel(i){if(!confirm('Remove this level and everyone in it?'))return;
+  ORG.levels.splice(i,1);orgTouch();orgPaint();}
+function orgMoveLevel(i,d){const j=i+d;if(j<0||j>=ORG.levels.length)return;
+  const x=ORG.levels[i];ORG.levels[i]=ORG.levels[j];ORG.levels[j]=x;orgTouch();orgPaint();}
+function orgAddDept(){ORG.departments.push({id:oid('D'),kicker:'',title:'',heads:[],
+  groups:[{id:oid('G'),label:'',members:[]}]});orgTouch();orgPaint();}
+function orgDelDept(i){if(!confirm('Remove this whole department?'))return;
+  ORG.departments.splice(i,1);orgTouch();orgPaint();}
+function orgMoveDept(i,d){const j=i+d;if(j<0||j>=ORG.departments.length)return;
+  const x=ORG.departments[i];ORG.departments[i]=ORG.departments[j];ORG.departments[j]=x;orgTouch();orgPaint();}
+function orgAddGroup(di){ORG.departments[di].groups.push({id:oid('G'),label:'',members:[]});orgTouch();orgPaint();}
+function orgDelGroup(di,gi){if(!confirm('Remove this group and everyone in it?'))return;
+  ORG.departments[di].groups.splice(gi,1);orgTouch();orgPaint();}
+
+function orgPhoto(path,i){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=()=>{
+    if(!inp.files[0])return;
+    const f=inp.files[0];
+    if(f.size>1024*1024) return toast('That photo is larger than 1 MB. Please use a smaller image.','err');
+    guard(async()=>{
+      overlayOn('Uploading photo','Adding it to the chart.');
+      try{
+        const b=await new Promise((res,rej)=>{const r=new FileReader();
+          r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Could not read that file.'));
+          r.readAsDataURL(f);});
+        const r=await api('orgPhoto',{file:{name:f.name,mimeType:f.type||'image/jpeg',bytes:b}});
+        orgList(path)[i].photo=r.url;orgTouch();orgPaint();toast('Photo added.','ok');
+      } finally { overlayOff(); }
+    });
+  };
+  inp.click();
+}
+
+function orgSave(){
+  const empties=[];
+  ORG.levels.forEach(L=>(L.people||[]).forEach(p=>{if(!p.name.trim())empties.push(1);}));
+  ORG.departments.forEach(d=>{(d.heads||[]).forEach(p=>{if(!p.name.trim())empties.push(1);});
+    (d.groups||[]).forEach(g=>(g.members||[]).forEach(p=>{if(!p.name.trim())empties.push(1);}));});
+  if(empties.length && !confirm(empties.length+' entr'+(empties.length===1?'y has':'ies have')+
+     ' no name yet and will show as blank on the website.\n\nSave anyway?')) return;
+  guard(async()=>{
+    overlayOn('Saving the chart','Publishing it to the website.');
+    try{
+      const r=await api('orgSave',{data:ORG});
+      orgSaved('Saved - '+r.people+' people published');
+      $('orgSaveBtn').disabled=true;
+      toast('Chart saved. The website will show it within a minute.','ok');
+    } finally { overlayOff(); }
+  });
+}
+
+/* ------------------------- AUDIT ------------------------- */
+let LOG_ALL = [], LOG_SHOW = 25, LOG_Q = '', LOG_ACTION = '', LOG_PERIOD = 'all';
+function logPeriod(k){ LOG_PERIOD=k; LOG_SHOW=25; renderLog(); }
+function logMore(){ LOG_SHOW+=25; renderLog(); }
+function logFilter(){ LOG_Q=$('logQ').value.trim().toLowerCase();
+  LOG_ACTION=$('logAction').value; LOG_SHOW=25; renderLog(); }
+
+function renderLog(){
+  const r = periodRange(LOG_PERIOD);
+  const from = r.from?new Date(r.from+'T00:00:00'):null;
+  const list = LOG_ALL.filter(x=>{
+    if(from && new Date(x.timestamp) < from) return false;
+    if(LOG_ACTION && x.action !== LOG_ACTION) return false;
+    if(LOG_Q && (x.actor+' '+x.action+' '+x.detail).toLowerCase().indexOf(LOG_Q)===-1) return false;
+    return true;
+  });
+  const shown = list.slice(0, LOG_SHOW);
+  $('logRows').innerHTML = shown.length ? shown.map(r2=>`<tr>
+      <td style="white-space:nowrap">${fmtDT(r2.timestamp)}</td><td>${esc(r2.actor)}</td>
+      <td><span class="pill role">${esc(r2.action)}</span></td>
+      <td style="font-size:.82rem">${esc(r2.detail)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty">No activity matches these filters.</td></tr>';
+  $('logMore').innerHTML = (list.length > LOG_SHOW)
+    ? `<button class="btn ghost" onclick="logMore()">Load more (${list.length-LOG_SHOW} older)</button>` : '';
+  $('logCount').textContent = `Showing ${shown.length} of ${list.length}`;
+}
+
+async function viewAudit(el){
+  LOG_ALL = await api('listAudit',{limit:400});
+  LOG_SHOW = 25;
+  const actions = [...new Set(LOG_ALL.map(x=>x.action))].sort();
+  el.innerHTML = `<h2 class="pt">Activity Log</h2>
+    <p class="ps">Everything that happens in the portal, newest first.</p>
+    <div class="period">${PERIODS.map(([k,l])=>
+      `<button class="${LOG_PERIOD===k?'on':''}" onclick="logPeriod('${k}')">${l}</button>`).join('')}</div>
+    <div class="card" style="padding:12px 18px"><div class="row" style="gap:10px">
+      <input id="logQ" placeholder="Search person or detail" style="max-width:280px" oninput="logFilter()">
+      <select id="logAction" style="max-width:200px" onchange="logFilter()">
+        <option value="">All actions</option>
+        ${actions.map(a=>`<option>${esc(a)}</option>`).join('')}</select>
+      <span class="right" style="font-size:.82rem;color:var(--ink3)" id="logCount"></span></div></div>
+    <div class="card"><div class="tw"><table>
+      <tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr>
+      <tbody id="logRows"></tbody>
+    </table></div><div class="loadmore" id="logMore"></div></div>`;
+  renderLog();
+}
+
+/* ------------------------- ACCOUNT ------------------------- */
+async function viewAccount(el){
+  el.innerHTML = `<h2 class="pt">My Account</h2><p class="ps">Your details and password.</p>
+    <div class="card">
+      <div class="grid g2">
+        <div><div style="font-size:.72rem;color:var(--ink3)">NAME</div><b>${esc(ME.name)}</b></div>
+        <div><div style="font-size:.72rem;color:var(--ink3)">EMAIL</div><b>${esc(ME.email)}</b></div>
+        <div><div style="font-size:.72rem;color:var(--ink3)">POSITION</div><b>${esc(ME.position||'-')}</b></div>
+        <div><div style="font-size:.72rem;color:var(--ink3)">ROLE</div>
+          <b>${ME.role==='superadmin'?'Super Administrator':ME.role==='admin'?'Administrator':'Staff'}</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <b class="f-lex">Change password</b>
+      <label>Current password</label><input type="password" id="acOld" autocomplete="current-password">
+      <label>New password (minimum 8 characters)</label><input type="password" id="acNew" autocomplete="new-password">
+      <label>Confirm new password</label><input type="password" id="acNew2" autocomplete="new-password">
+      <button class="btn" style="margin-top:16px" id="acBtn" onclick="doChangePw()">Update password</button>
+    </div>`;
+}
+function doChangePw(){
+  guard(async()=>{
+    const o=$('acOld').value, n=$('acNew').value, n2=$('acNew2').value;
+    if(n!==n2) return toast('The new passwords do not match.','err');
+    if(n.length<8) return toast('Use at least 8 characters.','err');
+    busy($('acBtn'),true,'Update password'); overlayOn('Updating password','Securing your account.');
+    try{
+      const d = await api('changePassword',{currentPassword:o,newPassword:n});
+      TOKEN = d.token; sessionStorage.setItem('iip_token',TOKEN); ME = d.user;
+      ['acOld','acNew','acNew2'].forEach(i=>$(i).value='');
+      toast('Password updated.','ok');
+    } finally { overlayOff(); busy($('acBtn'),false,'Update password'); }
+  });
+}
+
+/* ------------------------- BOOT ------------------------- */
+function hideBoot(){ const b=$('boot'); b.classList.add('hide');
+  setTimeout(()=>{ b.style.display='none'; }, 380); }
+
+(async function(){
+  const t = $('bootTxt');
+  if(!TOKEN){ t.textContent = 'Preparing sign-in'; setTimeout(hideBoot, 260); return; }
+  try{
+    t.textContent = 'Checking your session';
+    ME = await api('session');
+    t.textContent = 'Welcome back, ' + (ME.name||'').split(' ')[0];
+    if(ME.mustChange){ $('loginForm').style.display='none'; $('changeForm').style.display='block'; }
+    else enterApp();
+  }catch(e){
+    t.textContent = 'Please sign in';
+    sessionStorage.removeItem('iip_token'); TOKEN=''; ME=null;
+    $('app').style.display='none'; $('login').style.display='flex';
+  }
+  setTimeout(hideBoot, 220);
+})();
+</script>
+</body>
+</html>
