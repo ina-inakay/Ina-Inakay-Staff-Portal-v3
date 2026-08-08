@@ -192,6 +192,11 @@ code{background:var(--cream);padding:2px 6px;border-radius:4px;font-size:.85em;}
 .org-grp{border:1px dashed var(--rule);border-radius:9px;padding:10px;margin:9px 0;background:#FAFAF7;}
 .org-empty{text-align:center;color:var(--ink3);padding:26px;border:1.5px dashed var(--rule);
  border-radius:12px;font-size:.88rem;}
+.lnk{background:transparent;border:none;padding:0 0 0 4px;color:var(--red);font-family:inherit;
+ font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+.lnk:hover{text-decoration:underline;}
+.loadwrap{text-align:center;padding:14px 0 4px;}
+.loadwrap .info{display:block;font-size:.78rem;color:var(--ink3);margin-top:7px;}
 .org-bar{position:sticky;bottom:0;background:var(--cream);padding:12px 0;border-top:1.5px solid var(--rule);
  display:flex;gap:9px;align-items:center;flex-wrap:wrap;z-index:15;}
 </style>
@@ -334,6 +339,27 @@ function fmtDate(v){ if(!v) return '-'; const d=new Date(v); return isNaN(d)?Str
   :d.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}); }
 function fmtDT(v){ if(!v) return '-'; const d=new Date(v); return isNaN(d)?String(v)
   :d.toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+/* ---- Read more: long text is trimmed at a word boundary and expands in place ---- */
+let EXPN = 0;
+function expandable(text, limit){
+  const t = String(text == null ? '' : text).trim();
+  if (t.length <= limit) return esc(t);
+  let cut = t.lastIndexOf(' ', limit);
+  if (cut < limit * 0.6) cut = limit;
+  const id = 'ex' + (++EXPN);
+  return `<span id="${id}s">${esc(t.slice(0, cut))}&hellip;</span>` +
+         `<span id="${id}f" style="display:none">${esc(t)}</span>` +
+         `<button class="lnk" onclick="toggleExp('${id}',this)">Read more</button>`;
+}
+function toggleExp(id, btn){
+  const shortEl = $(id + 's'), fullEl = $(id + 'f');
+  if (!shortEl || !fullEl) return;
+  const opening = fullEl.style.display === 'none';
+  shortEl.style.display = opening ? 'none' : '';
+  fullEl.style.display  = opening ? '' : 'none';
+  btn.textContent = opening ? 'Show less' : 'Read more';
+}
+
 const statusPill = s => `<span class="pill ${s==='Approved'?'approved':s==='Needs Revision'?'revision':'pending'}">${esc(s||'Pending')}</span>`;
 const progPill = p => `<span class="pill ${p==='Completed'?'prog-done':p==='Partially Done'?'prog-part':'prog-wip'}">${esc(p||'Completed')}</span>`;
 const PROGRESS = ['In Progress','Partially Done','Completed'];
@@ -693,14 +719,14 @@ function renderRows(items){
     out += `<tr>
       <td style="white-space:nowrap">${fmtDT(s.submittedAt)}</td>
       ${isAdmin()?`<td><b>${esc(s.submitterName)}</b><div style="font-size:.74rem;color:var(--ink3)">${esc(s.submitterEmail)}</div></td>`:''}
-      <td><b>${esc(s.typeTitle)}</b>${s.notes?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${esc(s.notes)}</div>`:''}</td>
+      <td><b>${esc(s.typeTitle)}</b>${s.notes?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${expandable(s.notes,100)}</div>`:''}</td>
       <td>${s.fileUrl?`<a href="${esc(s.fileUrl)}" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">Open</a>
           <div style="font-size:.72rem;color:var(--ink3)">${esc(s.fileSource||'')}</div>`:'<span style="color:var(--ink3)">-</span>'}</td>
       <td>${canEdit
         ? `<select onchange="setProgress('${esc(s.id)}',this.value)" style="padding:5px 8px;font-size:.8rem">
              ${PROGRESS.map(p=>`<option${s.progress===p?' selected':''}>${p}</option>`).join('')}</select>`
         : progPill(s.progress)}</td>
-      <td>${statusPill(s.status)}${s.reviewNotes?`<div style="font-size:.76rem;color:var(--ink3);margin-top:4px">${esc(s.reviewNotes)}</div>`:''}</td>
+      <td>${statusPill(s.status)}${s.reviewNotes?`<div style="font-size:.76rem;color:var(--ink3);margin-top:4px">${expandable(s.reviewNotes,90)}</div>`:''}</td>
       <td style="white-space:nowrap">
         ${isAdmin()?`<button class="btn sm navy" onclick='reviewModal(${JSON.stringify(s)})'>Review</button>`:''}
         ${canEdit?`<button class="btn sm ghost" onclick='editModal(${JSON.stringify(s)})'>Edit</button>`:''}
@@ -838,50 +864,53 @@ function delSub(id){
 }
 
 /* ------------------------- ANNOUNCEMENTS ------------------------- */
-let ANN_ALL = [], ANN_SHOW = 5, ANN_Q = '', ANN_PERIOD = 'all';
-function annPeriod(k){ ANN_PERIOD=k; ANN_SHOW=5; renderAnnList(); }
-function annSearch(){ ANN_Q=$('annQ').value.trim().toLowerCase(); ANN_SHOW=5; renderAnnList(); }
-function annMore(){ ANN_SHOW+=5; renderAnnList(); }
+let ANN_ALL=[], ANN_SHOW=5, ANN_Q='', ANN_PERIOD='all';
+function annPeriod(k){ ANN_PERIOD=k; ANN_SHOW=5; annRender(); }
+function annSearch(){ ANN_Q=$('annQ').value.trim().toLowerCase(); ANN_SHOW=5; annRender(); }
+function annMore(){ ANN_SHOW+=5; annRender(); }
 
 function annFiltered(){
   const r = periodRange(ANN_PERIOD);
-  const from = r.from?new Date(r.from+'T00:00:00'):null;
+  const from = r.from ? new Date(r.from+'T00:00:00') : null;
   return ANN_ALL.filter(a=>{
     if(from && new Date(a.createdAt) < from) return false;
     if(ANN_Q && (a.title+' '+a.body+' '+a.authorName).toLowerCase().indexOf(ANN_Q)===-1) return false;
     return true;
   });
 }
-function renderAnnList(){
-  const list = annFiltered(), shown = list.slice(0, ANN_SHOW);
+
+function annRender(){
+  const list = annFiltered();
+  const shown = list.slice(0, ANN_SHOW);
   $('annList').innerHTML = shown.length ? shown.map(a=>`<div class="item">
       <div class="row"><h4>${a.pinned?'<span class="pill gold" style="margin-right:6px">Pinned</span>':''}${esc(a.title)}</h4>
         ${a.audience==='Admins'?'<span class="pill role">Admins only</span>':''}
         ${isAdmin()?`<span class="right"><button class="btn sm ghost" onclick='annModal(${JSON.stringify(a)})'>Edit</button>
           <button class="btn sm ghost" onclick="delAnn('${esc(a.id)}')">Delete</button></span>`:''}</div>
       <div class="meta">${esc(a.authorName)} - ${fmtDT(a.createdAt)}${a.updatedAt?' (edited)':''}</div>
-      <div class="body">${esc(a.body)}</div></div>`).join('')
+      <div class="body">${expandable(a.body, 220)}</div></div>`).join('')
     : '<div class="card"><div class="empty">No announcements match.</div></div>';
+  $('annCount').textContent = `Showing ${shown.length} of ${list.length}`;
   $('annMore').innerHTML = (list.length > ANN_SHOW)
     ? `<button class="btn ghost" onclick="annMore()">Load more (${list.length-ANN_SHOW} older)</button>` : '';
-  $('annCount').textContent = `Showing ${shown.length} of ${list.length}`;
 }
 
 async function viewAnnouncements(el){
   ANN_ALL = await api('listAnnouncements');
   ANN_SHOW = 5;
   el.innerHTML = `
-    <div class="row"><div><h2 class="pt">Announcements</h2><p class="ps">News and reminders for the team.</p></div>
+    <div class="row"><div><h2 class="pt">Announcements</h2>
+      <p class="ps">News and reminders for the team. Pinned items stay at the top.</p></div>
       ${isAdmin()?`<button class="btn right" onclick="annModal()">New announcement</button>`:''}</div>
-    ${(PERIODS.map(([k,l])=>`<button class="${ANN_PERIOD===k?'on':''}" onclick="annPeriod('${k}')">${l}</button>`).join('')
-      ? '<div class="period">'+PERIODS.map(([k,l])=>`<button class="${ANN_PERIOD===k?'on':''}" onclick="annPeriod('${k}')">${l}</button>`).join('')+'</div>' : '')}
+    <div class="period">${PERIODS.map(([k,l])=>
+      `<button class="${ANN_PERIOD===k?'on':''}" onclick="annPeriod('${k}')">${l}</button>`).join('')}</div>
     <div class="card" style="padding:12px 18px"><div class="row">
       <input id="annQ" placeholder="Search announcements" style="max-width:320px"
         value="${esc(ANN_Q)}" oninput="annSearch()">
       <span class="right" style="font-size:.82rem;color:var(--ink3)" id="annCount"></span></div></div>
     <div id="annList"></div>
-    <div class="loadmore" id="annMore"></div>`;
-  renderAnnList();
+    <div class="loadwrap" id="annMore"></div>`;
+  annRender();
 }
 
 function annModal(a){
@@ -914,28 +943,43 @@ function delAnn(id){
 }
 
 /* ------------------------- REQUIREMENTS ------------------------- */
+let TYPES_ALL=[], TYPES_SHOW=10;
+
+function typesRender(){
+  const shown = TYPES_ALL.slice(0, TYPES_SHOW);
+  $('typeRows').innerHTML = shown.length ? shown.map(t=>`<tr>
+      <td><b>${esc(t.title)}</b>${t.description?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${expandable(t.description,110)}</div>`:''}</td>
+      <td>${esc(t.frequency||'-')}</td><td>${t.dueDate?fmtDate(t.dueDate):'-'}</td>
+      <td style="font-size:.8rem">${String(t.assignedTo||'All').toLowerCase()==='all'
+        ? '<span class="pill gold">Everyone</span>'
+        : String(t.assignedTo).split(/[,;]/).length + ' selected'}</td>
+      <td>${t.requiresFile?'Required':'Optional'}</td>
+      <td><span class="pill ${t.status==='Active'?'approved':'off'}">${esc(t.status)}</span></td>
+      <td style="white-space:nowrap"><button class="btn sm ghost" onclick='typeModal(${JSON.stringify(t)})'>Edit</button>
+        <button class="btn sm ghost" onclick="delType('${esc(t.id)}')">Delete</button></td></tr>`).join('')
+    : '<tr><td colspan="7" class="empty">No requirements yet. Create one so staff have something to submit.</td></tr>';
+  $('typeMore').innerHTML = (TYPES_ALL.length > TYPES_SHOW)
+    ? `<button class="btn ghost" onclick="typesMore()">Load more (${TYPES_ALL.length-TYPES_SHOW} more)</button>
+       <span class="info">Showing ${shown.length} of ${TYPES_ALL.length}</span>`
+    : (TYPES_ALL.length > 10 ? `<span class="info">Showing all ${TYPES_ALL.length}</span>` : '');
+}
+function typesMore(){ TYPES_SHOW += 10; typesRender(); }
+
 async function viewRequirements(el){
   const [list, users] = await Promise.all([api('listTypes'), api('listUsers')]);
   CACHE.users = users;
+  TYPES_ALL = list; TYPES_SHOW = 10;
   el.innerHTML = `
     <div class="row"><div><h2 class="pt">Requirements</h2>
       <p class="ps">What staff are asked to submit. Assign to everyone or to specific people.</p></div>
       <button class="btn right" onclick="typeModal()">New requirement</button></div>
     <div class="card"><div class="tw"><table>
       <tr><th>Title</th><th>Frequency</th><th>Due</th><th>Assigned to</th><th>File</th><th>Status</th><th></th></tr>
-      ${list.length ? list.map(t=>`<tr>
-        <td><b>${esc(t.title)}</b>${t.description?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${esc(t.description)}</div>`:''}</td>
-        <td>${esc(t.frequency||'-')}</td><td>${t.dueDate?fmtDate(t.dueDate):'-'}</td>
-        <td style="font-size:.8rem">${String(t.assignedTo||'All').toLowerCase()==='all'
-          ? '<span class="pill gold">Everyone</span>'
-          : String(t.assignedTo).split(/[,;]/).length + ' selected'}</td>
-        <td>${t.requiresFile?'Required':'Optional'}</td>
-        <td><span class="pill ${t.status==='Active'?'approved':'off'}">${esc(t.status)}</span></td>
-        <td style="white-space:nowrap"><button class="btn sm ghost" onclick='typeModal(${JSON.stringify(t)})'>Edit</button>
-          <button class="btn sm ghost" onclick="delType('${esc(t.id)}')">Delete</button></td></tr>`).join('')
-      : '<tr><td colspan="7" class="empty">No requirements yet. Create one so staff have something to submit.</td></tr>'}
-    </table></div></div>`;
+      <tbody id="typeRows"></tbody>
+    </table></div><div class="loadwrap" id="typeMore"></div></div>`;
+  typesRender();
 }
+
 function typeModal(t){
   t = t || {};
   openModal(`<h3>${t.id?'Edit':'New'} requirement</h3>
