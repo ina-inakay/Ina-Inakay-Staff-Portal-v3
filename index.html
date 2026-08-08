@@ -197,6 +197,44 @@ code{background:var(--cream);padding:2px 6px;border-radius:4px;font-size:.85em;}
 .lnk:hover{text-decoration:underline;}
 .loadwrap{text-align:center;padding:14px 0 4px;}
 .loadwrap .info{display:block;font-size:.78rem;color:var(--ink3);margin-top:7px;}
+.task{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px 18px;margin-bottom:11px;
+ display:flex;gap:14px;align-items:flex-start;cursor:pointer;transition:transform .16s,box-shadow .16s;}
+.task:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(12,39,66,.10);}
+.task.revision{border-left:4px solid var(--danger);background:#FFFBFA;}
+.task.done{border-left:4px solid var(--green);}
+.task.pendingrev{border-left:4px solid var(--amber);}
+.task-ico{width:40px;height:40px;border-radius:10px;background:var(--cream);color:var(--navy);
+ display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.05rem;font-weight:700;}
+.task-b{flex:1;min-width:0;}
+.task-t{font-family:Lexend,sans-serif;font-weight:600;font-size:.97rem;color:var(--navy);line-height:1.3;}
+.task-m{font-size:.78rem;color:var(--ink3);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.task-d{font-size:.84rem;color:var(--ink3);margin-top:7px;line-height:1.5;}
+.due{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.due-late{background:#FDE7E5;color:var(--danger);}
+.due-soon{background:#FFF4DA;color:var(--amber);}
+.due-ok{background:#E7EDF4;color:var(--navy);}
+.task-go{color:var(--ink3);font-size:1.2rem;align-self:center;flex-shrink:0;}
+.freqbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.freqbar button{background:#fff;border:1.5px solid var(--rule);border-radius:20px;padding:7px 15px;
+ font-size:.82rem;font-weight:600;color:var(--ink3);}
+.freqbar button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.detail-head{background:var(--navy);color:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;}
+.detail-head h3{font-family:Lexend,sans-serif;font-size:1.15rem;margin-bottom:6px;}
+.detail-head .dm{font-size:.82rem;color:#B9C6D4;display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;}
+.instr{background:var(--cream);border-radius:10px;padding:16px 18px;font-size:.92rem;line-height:1.65;
+ white-space:pre-wrap;color:var(--ink);}
+.hist td{font-size:.83rem;}
+.hist .per{font-weight:600;color:var(--navy);}
+.banner{border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.88rem;line-height:1.6;}
+.banner.rev{background:#FDE7E5;border-left:4px solid var(--danger);color:#7A1D17;}
+.banner.ok{background:#E1F5E9;border-left:4px solid var(--green);color:#17583A;}
+.banner.wait{background:#FFF4DA;border-left:4px solid var(--amber);color:#7A5B10;}
+.person-row{background:#fff;border:1px solid var(--rule);border-radius:11px;padding:14px 16px;margin-bottom:9px;}
+.person-row .ph{display:flex;gap:10px;align-items:center;cursor:pointer;flex-wrap:wrap;}
+.person-row .nm{font-family:Lexend,sans-serif;font-weight:600;color:var(--navy);}
+.mini{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+.mini.g{background:#E1F5E9;color:var(--green);} .mini.a{background:#FFF4DA;color:var(--amber);}
+.mini.r{background:#FDE7E5;color:var(--danger);} .mini.n{background:#EEE;color:var(--ink3);}
 .org-bar{position:sticky;bottom:0;background:var(--cream);padding:12px 0;border-top:1.5px solid var(--rule);
  display:flex;gap:9px;align-items:center;flex-wrap:wrap;z-index:15;}
 </style>
@@ -249,6 +287,7 @@ code{background:var(--cream);padding:2px 6px;border-radius:4px;font-size:.85em;}
   <nav class="tabs" id="tabs"></nav>
   <main>
     <div class="page" id="p-dashboard"></div>
+    <div class="page" id="p-tasks"></div>
     <div class="page" id="p-submissions"></div>
     <div class="page" id="p-announcements"></div>
     <div class="page" id="p-requirements"></div>
@@ -360,6 +399,60 @@ function toggleExp(id, btn){
   btn.textContent = opening ? 'Show less' : 'Read more';
 }
 
+/* ======================================================================
+   PERIOD ENGINE
+   A recurring requirement is "done" only when a submission exists inside the
+   CURRENT period. The period is derived from the submission date, so a monthly
+   task reappears by itself on the first of each month - no schedule to run.
+   ====================================================================== */
+const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const pad2=n=>String(n).padStart(2,'0');
+function isoWeek(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));
+  const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return {y:t.getUTCFullYear(),w:Math.ceil(((t-y0)/86400000+1)/7)};
+}
+function periodKey(freq,date){
+  const d=new Date(date); if(isNaN(d)) return 'once';
+  const y=d.getFullYear(), m=d.getMonth()+1;
+  switch(String(freq||'One-time')){
+    case 'Daily':     return y+'-'+pad2(m)+'-'+pad2(d.getDate());
+    case 'Weekly':    {const w=isoWeek(d); return w.y+'-W'+pad2(w.w);}
+    case 'Monthly':   return y+'-'+pad2(m);
+    case 'Quarterly': return y+'-Q'+Math.ceil(m/3);
+    case 'Annually':  return String(y);
+    default:          return 'once';
+  }
+}
+function periodLabel(freq,key){
+  if(!key||key==='once') return 'One-time';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(key)) return fmtDate(key+'T00:00:00');
+  if(/^\d{4}-W\d{2}$/.test(key)) return 'Week '+Number(key.slice(6))+', '+key.slice(0,4);
+  if(/^\d{4}-Q\d$/.test(key)) return key.slice(5)+' '+key.slice(0,4);
+  if(/^\d{4}-\d{2}$/.test(key)) return MON[Number(key.slice(5))-1]+' '+key.slice(0,4);
+  if(/^\d{4}$/.test(key)) return key;
+  return key;
+}
+const currentPeriod=freq=>periodKey(freq,new Date());
+
+/* Due-date wording that tells you what to do at a glance. */
+function dueInfo(d){
+  if(!d) return null;
+  const due=new Date(d); if(isNaN(due)) return null;
+  /* Compare whole calendar days, not timestamps: a task due today must read
+     "Due today" all day, not "Due tomorrow" because midnight is hours away. */
+  const dueDay=new Date(due.getFullYear(),due.getMonth(),due.getDate());
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const days=Math.round((dueDay-today)/86400000);
+  if(days<0)  return {cls:'due-late',text:'Overdue by '+Math.abs(days)+' day'+(Math.abs(days)===1?'':'s')};
+  if(days===0)return {cls:'due-soon',text:'Due today'};
+  if(days===1)return {cls:'due-soon',text:'Due tomorrow'};
+  if(days<=7) return {cls:'due-soon',text:'Due in '+days+' days'};
+  return {cls:'due-ok',text:'Due '+fmtDate(d)};
+}
+
 const statusPill = s => `<span class="pill ${s==='Approved'?'approved':s==='Needs Revision'?'revision':'pending'}">${esc(s||'Pending')}</span>`;
 const progPill = p => `<span class="pill ${p==='Completed'?'prog-done':p==='Partially Done'?'prog-part':'prog-wip'}">${esc(p||'Completed')}</span>`;
 const PROGRESS = ['In Progress','Partially Done','Completed'];
@@ -437,7 +530,8 @@ function doLogout(){
 /* ------------------------- SHELL ------------------------- */
 const TABS = [
   {id:'dashboard',     label:'Dashboard'},
-  {id:'submissions',   label:'Submissions'},
+  {id:'tasks',         label:'My Tasks'},
+  {id:'submissions',   label:'All Submissions', admin:true},
   {id:'announcements', label:'Announcements'},
   {id:'requirements',  label:'Requirements', admin:true},
   {id:'users',         label:'Accounts',     admin:true},
@@ -470,7 +564,8 @@ function render(id){
   el.innerHTML = '<div class="empty">Loading...</div>';
   guard(async () => {
     if(id==='dashboard')      await viewDashboard(el);
-    if(id==='submissions')    await viewSubmissions(el);
+    if(id==='tasks')          await viewTasks(el);
+    if(id==='submissions')    await (SUB_VIEW==='person'?viewByPerson(el):viewSubmissions(el));
     if(id==='announcements')  await viewAnnouncements(el);
     if(id==='requirements')   await viewRequirements(el);
     if(id==='users')          await viewUsers(el);
@@ -521,7 +616,7 @@ async function viewDashboard(el){
       <div class="card" style="margin-top:16px;">
         <div class="row"><b class="f-lex">Completion</b><span class="right">${d.completion}% of ${d.openTypes} requirement(s)</span></div>
         <div class="bar" style="margin-top:10px;"><i style="width:${d.completion}%"></i></div>
-        ${d.outstanding.length ? `<div style="margin-top:14px;font-size:.85rem;">
+        ${d.outstanding.length ? `<div style="margin-top:14px;font-size:.85rem;cursor:pointer" onclick="go('tasks')">
           <b>Still to submit:</b><ul style="margin:8px 0 0 18px;line-height:1.7;">
           ${d.outstanding.map(o=>`<li>${esc(o.title)}${o.dueDate?` <span style="color:var(--ink3)">- due ${fmtDate(o.dueDate)}</span>`:''}</li>`).join('')}
           </ul></div>` : '<div class="hint" style="margin-top:12px;">Everything assigned to you has been approved.</div>'}
@@ -536,7 +631,7 @@ async function viewDashboard(el){
           <span>${esc(r.typeTitle)}</span><span class="right">${progPill(r.progress)} ${statusPill(r.status)}
           <span style="color:var(--ink3);font-size:.78rem;margin-left:6px">${fmtDT(r.submittedAt)}</span></span>
         </div>`).join('')}</div></div>`:''}
-      <button class="btn" onclick="go('submissions')">Make a submission</button>`;
+      <button class="btn" onclick="go('tasks')">Open my tasks</button>`;
     return;
   }
   el.innerHTML = `
@@ -602,12 +697,12 @@ async function viewSubmissions(el, keepFilters){
     <p class="ps">${isAdmin() ? 'All staff submissions, newest first. Filter, search, then review.'
       : 'Submit your requirements, mark your progress, and track review status.'}</p>
 
-    <div class="seg">
-      <button class="${SUB_MODE==='view'?'on':''}" onclick="setSubMode('view')">View submissions</button>
-      <button class="${SUB_MODE==='new'?'on':''}" onclick="setSubMode('new')">Make a submission</button>
-    </div>
+    ${isAdmin()?`<div class="seg">
+      <button class="on" onclick="subView('list')">All submissions</button>
+      <button onclick="subView('person')">By person</button>
+    </div>`:''}
 
-    <div class="card" id="newCard" style="display:${SUB_MODE==='new'?'block':'none'}">
+    <div class="card" id="newCard" style="display:none">
       <div class="row"><b class="f-lex">New submission</b></div>
       <div id="newBody">
       ${open.length ? `
@@ -643,7 +738,7 @@ async function viewSubmissions(el, keepFilters){
       </div>
     </div>
 
-    <div id="viewArea" style="display:${SUB_MODE==='view'?'block':'none'}">
+    <div id="viewArea">
     <div class="chips">
       ${chip('', 'All', c.all)}
       ${chip('Pending','Awaiting review',c.pending)}
@@ -861,6 +956,342 @@ function delSub(id){
     try{ await api('deleteSubmission',{id}); } finally{ overlayOff(); }
     toast('Withdrawn.','ok');
     FILTER.page=1; SUB_ITEMS=[]; await viewSubmissions($('p-submissions'),true); });
+}
+
+
+/* ======================================================================
+   MY TASKS  (Teams-style: To Do / Completed, open a task, read, turn in)
+   ====================================================================== */
+let TASK_TAB='todo', TASK_FREQ='', TASK_OPEN=null, TASK_TYPES=[], TASK_SUBS=[], TASK_FORCE=null;
+
+/* All of my submissions for one requirement, newest first. */
+function subsFor(typeId){
+  return TASK_SUBS.filter(x=>x.typeId===typeId)
+    .sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+}
+/* The submission that represents this requirement right now. */
+function currentSub(t){
+  const cp=currentPeriod(t.frequency);
+  const mine=subsFor(t.id);
+  if(t.frequency==='One-time'||!t.frequency) return mine[0]||null;
+  return mine.find(x=>periodKey(t.frequency,x.submittedAt)===cp)||null;
+}
+function taskState(t){
+  if(TASK_FORCE===t.id) return 'todo';
+  const s=currentSub(t);
+  if(!s) return 'todo';
+  if(s.status==='Needs Revision') return 'revision';
+  if(s.status==='Approved') return 'approved';
+  return 'pending';
+}
+const isTodo=t=>['todo','revision'].indexOf(taskState(t))>-1;
+
+async function viewTasks(el){
+  const [types,subs]=await Promise.all([
+    api('listTypes'),
+    api('listSubmissions',{filter:{submitterId:ME.id,pageSize:100,sort:'date_desc'}})
+  ]);
+  TASK_TYPES=types.filter(t=>t.status==='Active');
+  TASK_SUBS=(subs.items||[]).filter(x=>x.submitterId===ME.id||x.submitterEmail===ME.email);
+  if(TASK_OPEN){ const still=TASK_TYPES.find(t=>t.id===TASK_OPEN); if(!still) TASK_OPEN=null; }
+  TASK_OPEN?paintTaskDetail(el):paintTaskList(el);
+}
+
+function paintTaskList(el){
+  const todo=TASK_TYPES.filter(isTodo);
+  const done=TASK_TYPES.filter(t=>!isTodo(t));
+  const list=(TASK_TAB==='todo'?todo:done)
+    .filter(t=>!TASK_FREQ||(t.frequency||'One-time')===TASK_FREQ);
+  // sort: revisions first, then by due date, then title
+  list.sort((a,b)=>{
+    const ra=taskState(a)==='revision'?0:1, rb=taskState(b)==='revision'?0:1;
+    if(ra!==rb) return ra-rb;
+    const da=a.dueDate?new Date(a.dueDate):null, db=b.dueDate?new Date(b.dueDate):null;
+    if(da&&db) return da-db;
+    if(da) return -1; if(db) return 1;
+    return String(a.title).localeCompare(String(b.title));
+  });
+  const freqs=[...new Set(TASK_TYPES.map(t=>t.frequency||'One-time'))];
+  const revCount=todo.filter(t=>taskState(t)==='revision').length;
+
+  el.innerHTML=`
+    <h2 class="pt">My Tasks</h2>
+    <p class="ps">Everything assigned to you. Open a task to read the instructions and turn in your work.</p>
+    ${revCount?`<div class="banner rev"><b>${revCount} task${revCount===1?'':'s'} sent back for revision.</b>
+      Open ${revCount===1?'it':'them'} below to see what your reviewer asked for.</div>`:''}
+    <div class="seg">
+      <button class="${TASK_TAB==='todo'?'on':''}" onclick="taskTab('todo')">To Do (${todo.length})</button>
+      <button class="${TASK_TAB==='done'?'on':''}" onclick="taskTab('done')">Completed (${done.length})</button>
+    </div>
+    ${freqs.length>1?`<div class="freqbar">
+      <button class="${TASK_FREQ===''?'on':''}" onclick="taskFreq('')">All</button>
+      ${freqs.map(f=>`<button class="${TASK_FREQ===f?'on':''}" onclick="taskFreq('${esc(f)}')">${esc(f)}</button>`).join('')}
+    </div>`:''}
+    ${list.length?list.map(t=>taskCard(t)).join(''):`<div class="org-empty">${
+      TASK_TAB==='todo'
+        ? (TASK_FREQ?'Nothing '+esc(TASK_FREQ).toLowerCase()+' is outstanding.'
+                    :'<b>You are all caught up.</b><br>Nothing is waiting for you right now.')
+        : 'Nothing here yet. Tasks appear once you turn them in.'}</div>`}`;
+}
+
+function taskCard(t){
+  const st=taskState(t), sub=currentSub(t);
+  const due=st==='todo'||st==='revision'?dueInfo(t.dueDate):null;
+  const cls=st==='revision'?'revision':st==='approved'?'done':st==='pending'?'pendingrev':'';
+  const icon=st==='revision'?'!':st==='approved'?'&#10003;':st==='pending'?'&#8230;':'&#9679;';
+  return `<div class="task ${cls}" onclick="openTask('${esc(t.id)}')">
+    <div class="task-ico">${icon}</div>
+    <div class="task-b">
+      <div class="task-t">${esc(t.title)}</div>
+      <div class="task-m">
+        <span class="pill role">${esc(t.frequency||'One-time')}</span>
+        ${t.frequency&&t.frequency!=='One-time'
+          ? `<span>${esc(periodLabel(t.frequency,currentPeriod(t.frequency)))}</span>`:''}
+        ${due?`<span class="due ${due.cls}">${due.text}</span>`:''}
+        ${t.requiresFile?'<span>File required</span>':''}
+        <span>Assigned by ${esc(t.createdBy||'Administrator')}</span>
+      </div>
+      ${st==='revision'&&sub&&sub.reviewNotes
+        ? `<div class="task-d" style="color:var(--danger)"><b>Reviewer:</b> ${esc(sub.reviewNotes)}</div>`
+        : (t.description?`<div class="task-d">${expandable(t.description,140)}</div>`:'')}
+      ${st==='pending'?'<div class="task-d">Turned in - awaiting review.</div>':''}
+      ${st==='approved'&&sub?`<div class="task-d">Approved${sub.reviewedBy?' by '+esc(sub.reviewedBy):''} on ${fmtDate(sub.reviewedAt)}.</div>`:''}
+    </div>
+    <div class="task-go">&#8250;</div></div>`;
+}
+
+function taskTab(t){TASK_TAB=t;render('tasks');}
+function taskFreq(f){TASK_FREQ=f;render('tasks');}
+function openTask(id){TASK_OPEN=id;TASK_FORCE=null;render('tasks');}
+function closeTask(){TASK_OPEN=null;TASK_FORCE=null;render('tasks');}
+
+function paintTaskDetail(el){
+  const t=TASK_TYPES.find(x=>x.id===TASK_OPEN);
+  if(!t){TASK_OPEN=null;return paintTaskList(el);}
+  const st=taskState(t), sub=currentSub(t), hist=subsFor(t.id);
+  const due=dueInfo(t.dueDate);
+  const recurring=t.frequency&&t.frequency!=='One-time';
+
+  el.innerHTML=`
+    <button class="btn ghost sm" onclick="closeTask()" style="margin-bottom:14px">&larr; Back to my tasks</button>
+    <div class="detail-head">
+      <h3>${esc(t.title)}</h3>
+      <div class="dm">
+        <span>${esc(t.frequency||'One-time')}</span>
+        ${recurring?`<span>Period: ${esc(periodLabel(t.frequency,currentPeriod(t.frequency)))}</span>`:''}
+        ${t.dueDate?`<span>Due ${fmtDate(t.dueDate)}</span>`:''}
+        <span>Assigned by ${esc(t.createdBy||'Administrator')}</span>
+        ${t.requiresFile?'<span>A file or Drive link is required</span>':''}
+      </div>
+    </div>
+
+    ${st==='revision'?`<div class="banner rev"><b>Sent back for revision.</b>
+      ${sub&&sub.reviewNotes?'<br>'+esc(sub.reviewNotes):'<br>Your reviewer asked for changes.'}
+      <br><br>Update your work below and turn it in again.</div>`:''}
+    ${st==='pending'?`<div class="banner wait"><b>Turned in.</b> Submitted ${fmtDT(sub.submittedAt)} - awaiting review.</div>`:''}
+    ${st==='approved'?`<div class="banner ok"><b>Approved.</b>
+      ${sub.reviewedBy?'Reviewed by '+esc(sub.reviewedBy)+' ':''}${sub.reviewedAt?'on '+fmtDate(sub.reviewedAt):''}
+      ${sub.reviewNotes?'<br>'+esc(sub.reviewNotes):''}</div>`:''}
+    ${st==='todo'&&due&&due.cls==='due-late'?`<div class="banner rev"><b>${due.text}.</b></div>`:''}
+
+    <div class="card"><b class="f-lex">Instructions</b>
+      <div class="instr" style="margin-top:10px">${t.description?esc(t.description):'No further instructions were given.'}</div></div>
+
+    ${(st==='todo'||st==='revision')?turnInForm(t,st):submittedPanel(t,sub,recurring)}
+
+    ${hist.length?`<div class="card"><b class="f-lex">My submission history</b>
+      <p class="ps" style="margin:6px 0 8px">Every time you turned this in.</p>
+      <div class="tw"><table class="hist">
+        <tr><th>${recurring?'Period':'Submitted'}</th><th>Date</th><th>File</th><th>My progress</th><th>Result</th></tr>
+        ${hist.map(h=>`<tr>
+          <td class="per">${recurring?esc(periodLabel(t.frequency,periodKey(t.frequency,h.submittedAt))):'Submission'}</td>
+          <td>${fmtDT(h.submittedAt)}</td>
+          <td>${h.fileUrl?`<a href="${esc(h.fileUrl)}" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">Open</a>`:'-'}</td>
+          <td>${progPill(h.progress)}</td>
+          <td>${statusPill(h.status)}${h.reviewNotes?`<div style="font-size:.76rem;color:var(--ink3);margin-top:3px">${expandable(h.reviewNotes,80)}</div>`:''}</td>
+        </tr>`).join('')}
+      </table></div></div>`:''}`;
+  typeHintTask();
+}
+
+function turnInForm(t,st){
+  return `<div class="card">
+    <b class="f-lex">${st==='revision'?'Turn in your revised work':'Turn in your work'}</b>
+    <label>Your progress on this output</label>
+    <select id="tkProg">
+      <option value="Completed">Completed - this is my finished output</option>
+      <option value="Partially Done">Partially Done - part of the work is submitted</option>
+      <option value="In Progress">In Progress - still working on it</option>
+    </select>
+    <div class="hint">This is your own status. Your reviewer records Approved / Needs Revision separately.</div>
+    <label>Notes (optional)</label>
+    <textarea id="tkNotes" placeholder="Anything the reviewer should know"></textarea>
+    <label>Attach a file (up to 1 MB)</label>
+    <input type="file" id="tkFile" onchange="checkTaskFile()">
+    <div class="hint" id="tkFileHint">Larger than 1 MB? Upload it to Google Drive and paste the link below instead.</div>
+    <label>Or paste a Google Drive link</label>
+    <div class="row" style="gap:8px;flex-wrap:nowrap">
+      <input type="url" id="tkLink" placeholder="https://drive.google.com/..." style="flex:1">
+      <button class="btn ghost sm" id="tkCk" onclick="checkTaskLink()" style="white-space:nowrap">Check link</button>
+    </div>
+    <div class="linkcheck" id="tkLinkMsg"></div>
+    <div class="warnbox"><b>Before pasting a link:</b> open the file in Google Drive, click <b>Share</b>,
+      and set <b>General access</b> to <b>&ldquo;Anyone with the link&rdquo;</b> (Viewer).</div>
+    <button class="btn" style="margin-top:16px;padding:12px 26px" id="tkBtn" onclick="turnIn('${esc(t.id)}')">
+      ${st==='revision'?'Turn in again':'Turn in'}</button>
+  </div>`;
+}
+
+function submittedPanel(t,sub,recurring){
+  return `<div class="card">
+    <b class="f-lex">What you turned in</b>
+    <div class="row" style="margin-top:10px;gap:16px">
+      <div><div class="muted" style="font-size:.74rem">SUBMITTED</div><b>${fmtDT(sub.submittedAt)}</b></div>
+      <div><div class="muted" style="font-size:.74rem">MY PROGRESS</div>${progPill(sub.progress)}</div>
+      <div><div class="muted" style="font-size:.74rem">REVIEW</div>${statusPill(sub.status)}</div>
+    </div>
+    ${sub.notes?`<div style="margin-top:12px"><div class="muted" style="font-size:.74rem">MY NOTES</div>
+      <div style="font-size:.9rem;white-space:pre-wrap;margin-top:3px">${esc(sub.notes)}</div></div>`:''}
+    ${sub.fileUrl?`<a class="btn ghost sm" style="margin-top:12px" href="${esc(sub.fileUrl)}" target="_blank" rel="noopener">Open my attachment</a>`:''}
+    <div class="row" style="margin-top:16px;gap:9px">
+      ${sub.status==='Pending'?`<button class="btn ghost" onclick="undoTurnIn('${esc(sub.id)}')">Undo turn in</button>`:''}
+      ${recurring&&sub.status==='Approved'?`<button class="btn" onclick="submitAgain()">Submit again for a new period</button>`:''}
+    </div>
+    ${sub.status==='Pending'?'<div class="hint" style="margin-top:8px">You can undo this while it is still awaiting review.</div>':''}
+  </div>`;
+}
+
+function typeHintTask(){}
+function checkTaskFile(){
+  const f=$('tkFile').files[0],h=$('tkFileHint');
+  if(!f){h.textContent='Larger than 1 MB? Upload it to Google Drive and paste the link below instead.';h.style.color='';return;}
+  if(f.size>1024*1024){
+    h.textContent=`"${f.name}" is ${(f.size/1048576).toFixed(2)} MB - too large. Please use a Google Drive link instead.`;
+    h.style.color='var(--danger)';$('tkFile').value='';
+  }else{h.textContent=`${f.name} (${Math.round(f.size/1024)} KB) ready.`;h.style.color='var(--green)';}
+}
+function checkTaskLink(){
+  const link=$('tkLink').value.trim(),m=$('tkLinkMsg');
+  if(!link){m.className='linkcheck';m.textContent='Paste a Google Drive link first.';return;}
+  busy($('tkCk'),true,'Check link');
+  guard(async()=>{
+    try{const r=await api('checkLink',{link});
+      m.className='linkcheck '+(r.ok?'good':'bad');m.textContent=r.message;
+      if(r.ok&&r.url)$('tkLink').value=r.url;
+    }catch(e){m.className='linkcheck bad';m.textContent=e.message;}
+    finally{busy($('tkCk'),false,'Check link');}
+  });
+}
+function turnIn(typeId){
+  guard(async()=>{
+    const f=$('tkFile').files[0];
+    const btn=$('tkBtn');busy(btn,true,'Turn in');
+    overlayOn(f?'Uploading your file':'Turning in your work',
+              f?'Please keep this page open until it finishes.':'This only takes a moment.');
+    try{
+      const payload={typeId,notes:$('tkNotes').value.trim(),
+        link:$('tkLink').value.trim(),progress:$('tkProg').value};
+      if(f){
+        if(f.size>1024*1024) throw new Error('That file is larger than 1 MB. Please use a Google Drive link.');
+        payload.file={name:f.name,mimeType:f.type||'application/octet-stream',bytes:await toB64(f)};
+      }
+      const r=await api('submit',{payload});
+      if(r&&r.warning) toast(r.warning,'err'); else toast('Turned in.','ok');
+      render('tasks');
+    } finally{overlayOff();busy(btn,false,'Turn in');}
+  });
+}
+function undoTurnIn(id){
+  if(!confirm('Undo this turn in?\n\nYour submission will be removed and the task returns to your To Do list.')) return;
+  guard(async()=>{
+    overlayOn('Undoing turn in','Removing the submission.');
+    try{await api('deleteSubmission',{id});}finally{overlayOff();}
+    toast('Returned to your To Do list.','ok');render('tasks');
+  });
+}
+function submitAgain(){
+  const t=TASK_TYPES.find(x=>x.id===TASK_OPEN);
+  const el=$('p-tasks');
+  el.insertAdjacentHTML('afterbegin','');
+  // force the turn-in form by pretending nothing is submitted for this period
+  TASK_FORCE=t.id; render('tasks');
+}
+
+
+/* ---------------- Reviewer view grouped by person ---------------- */
+let SUB_VIEW='list', OPEN_PERSON=null;
+function subView(v){SUB_VIEW=v;OPEN_PERSON=null;render('submissions');}
+function togglePerson(id){OPEN_PERSON=OPEN_PERSON===id?null:id;render('submissions');}
+
+async function viewByPerson(el){
+  const [users,types,res]=await Promise.all([
+    api('listUsers'),api('listTypes'),
+    api('listSubmissions',{filter:{pageSize:100,sort:'date_desc'}})
+  ]);
+  const subs=res.items||[];
+  const active=types.filter(t=>t.status==='Active');
+  const people=users.filter(u=>u.active);
+
+  function assignedTo(t,email){
+    const to=String(t.assignedTo||'All').toLowerCase().trim();
+    if(!to||to==='all') return true;
+    return to.split(/[,;]/).map(x=>x.trim()).indexOf(String(email).toLowerCase())>-1;
+  }
+  function stateFor(t,u){
+    const mine=subs.filter(x=>(x.submitterId===u.id||x.submitterEmail===u.email)&&x.typeId===t.id)
+      .sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+    const cp=currentPeriod(t.frequency);
+    const cur=(t.frequency&&t.frequency!=='One-time')
+      ? mine.find(x=>periodKey(t.frequency,x.submittedAt)===cp)
+      : mine[0];
+    return {cur,all:mine};
+  }
+
+  el.innerHTML=`
+    <h2 class="pt">Submissions</h2>
+    <p class="ps">Who has turned in what, for the current period. Open a name to see their work.</p>
+    <div class="seg">
+      <button onclick="subView('list')">All submissions</button>
+      <button class="on" onclick="subView('person')">By person</button>
+    </div>
+    ${people.length?people.map(u=>{
+      const required=active.filter(t=>assignedTo(t,u.email));
+      let done=0,wait=0,rev=0,missing=0;
+      required.forEach(t=>{const st=stateFor(t,u);
+        if(!st.cur) missing++;
+        else if(st.cur.status==='Approved') done++;
+        else if(st.cur.status==='Needs Revision') rev++;
+        else wait++;});
+      const open=OPEN_PERSON===u.id;
+      return `<div class="person-row">
+        <div class="ph" onclick="togglePerson('${esc(u.id)}')">
+          <span class="nm">${esc(u.name)}</span>
+          <span class="muted" style="font-size:.78rem">${esc(u.position||u.role)}</span>
+          <span class="right" style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="mini g">${done} approved</span>
+            <span class="mini a">${wait} awaiting</span>
+            ${rev?`<span class="mini r">${rev} revision</span>`:''}
+            ${missing?`<span class="mini n">${missing} not submitted</span>`:'<span class="mini g">complete</span>'}
+            <span style="color:var(--ink3)">${open?'&#9650;':'&#9660;'}</span>
+          </span>
+        </div>
+        ${open?`<div class="tw" style="margin-top:12px"><table class="hist">
+          <tr><th>Requirement</th><th>Period</th><th>Turned in</th><th>File</th><th>Status</th><th></th></tr>
+          ${required.length?required.map(t=>{
+            const st=stateFor(t,u);
+            return `<tr>
+              <td class="per">${esc(t.title)}<div style="font-size:.74rem;color:var(--ink3)">${esc(t.frequency||'One-time')}</div></td>
+              <td>${t.frequency&&t.frequency!=='One-time'?esc(periodLabel(t.frequency,currentPeriod(t.frequency))):'-'}</td>
+              <td>${st.cur?fmtDT(st.cur.submittedAt):'<span style="color:var(--ink3)">Not yet</span>'}</td>
+              <td>${st.cur&&st.cur.fileUrl?`<a href="${esc(st.cur.fileUrl)}" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">Open</a>`:'-'}</td>
+              <td>${st.cur?statusPill(st.cur.status):'<span class="mini n">Not submitted</span>'}</td>
+              <td>${st.cur?`<button class="btn sm navy" onclick='reviewModal(${JSON.stringify(st.cur)})'>Review</button>`:''}
+                  ${st.all.length>1?`<div style="font-size:.72rem;color:var(--ink3);margin-top:3px">${st.all.length} submissions total</div>`:''}</td>
+            </tr>`;}).join('')
+          :'<tr><td colspan="6" class="empty">Nothing is assigned to this person.</td></tr>'}
+        </table></div>`:''}
+      </div>`;}).join('')
+    :'<div class="org-empty">No active staff accounts yet.</div>'}`;
 }
 
 /* ------------------------- ANNOUNCEMENTS ------------------------- */
