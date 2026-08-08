@@ -531,7 +531,7 @@ function doLogout(){
 const TABS = [
   {id:'dashboard',     label:'Dashboard'},
   {id:'tasks',         label:'My Tasks'},
-  {id:'submissions',   label:'All Submissions', admin:true},
+  {id:'submissions',   label:'Assignments',      admin:true},
   {id:'announcements', label:'Announcements'},
   {id:'requirements',  label:'Requirements', admin:true},
   {id:'users',         label:'Accounts',     admin:true},
@@ -565,7 +565,7 @@ function render(id){
   guard(async () => {
     if(id==='dashboard')      await viewDashboard(el);
     if(id==='tasks')          await viewTasks(el);
-    if(id==='submissions')    await (SUB_VIEW==='person'?viewByPerson(el):viewSubmissions(el));
+    if(id==='submissions')    await (SUB_VIEW==='manage'?viewManage(el):viewSubmissions(el));
     if(id==='announcements')  await viewAnnouncements(el);
     if(id==='requirements')   await viewRequirements(el);
     if(id==='users')          await viewUsers(el);
@@ -698,8 +698,8 @@ async function viewSubmissions(el, keepFilters){
       : 'Submit your requirements, mark your progress, and track review status.'}</p>
 
     ${isAdmin()?`<div class="seg">
-      <button class="on" onclick="subView('list')">All submissions</button>
-      <button onclick="subView('person')">By person</button>
+      <button onclick="subView('manage')">${isSuper()?'By administrator':'My assignments'}</button>
+      <button class="on">All submissions</button>
     </div>`:''}
 
     <div class="card" id="newCard" style="display:none">
@@ -1218,9 +1218,173 @@ function submitAgain(){
 }
 
 
+
+/* ======================================================================
+   MANAGE  -  ownership-scoped review area
+     super admin : Administrators  ->  their requirements  ->  who submitted
+     admin       : starts at their own requirements
+   Nobody is shown every task in the organization at once.
+   ====================================================================== */
+let MG_ADMIN=null, MG_TYPE=null, MG_CACHE={};
+
+function mgHome(){MG_ADMIN=null;MG_TYPE=null;render('submissions');}
+function mgOpenAdmin(e){MG_ADMIN=e;MG_TYPE=null;render('submissions');}
+function mgOpenType(id){MG_TYPE=id;render('submissions');}
+
+function crumbs(parts){
+  return '<div class="row" style="margin-bottom:14px;gap:6px;font-size:.85rem">'+
+    parts.map((p,i)=>i===parts.length-1
+      ? `<b style="color:var(--navy)">${esc(p.label)}</b>`
+      : `<button class="lnk" style="font-size:.85rem" onclick="${p.go}">${esc(p.label)}</button>
+         <span style="color:var(--ink3)">&rsaquo;</span>`).join('')+'</div>';
+}
+
+async function viewManage(el){
+  if(isSuper() && !MG_ADMIN) return mgAdminList(el);
+  const owner = MG_ADMIN || ME.email;
+  if(!MG_TYPE) return mgTypeList(el, owner);
+  return mgTypeDetail(el, owner);
+}
+
+/* ---- level 1: administrators (super only) ---- */
+async function mgAdminList(el){
+  const admins = await api('adminSummary');
+  el.innerHTML=`
+    <h2 class="pt">Assignments</h2>
+    <p class="ps">Requirements are managed by the administrator who created them.
+      Open an administrator to see what they assigned and who has turned it in.</p>
+    <div class="seg">
+      <button class="on">By administrator</button>
+      <button onclick="subView('list')">All submissions</button>
+    </div>
+    ${admins.length?admins.map(a=>`<div class="person-row">
+      <div class="ph" onclick="mgOpenAdmin('${esc(a.email)}')">
+        <span class="nm">${esc(a.name)}</span>
+        <span class="muted" style="font-size:.78rem">${esc(a.position||(a.role==='superadmin'?'Super Administrator':'Administrator'))}</span>
+        <span class="right" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span class="mini n">${a.activeTypes} requirement${a.activeTypes===1?'':'s'}</span>
+          ${a.pending?`<span class="mini a">${a.pending} to review</span>`:'<span class="mini g">nothing waiting</span>'}
+          ${a.revision?`<span class="mini r">${a.revision} in revision</span>`:''}
+          <span class="muted" style="font-size:.76rem">${a.lastActivity?'last activity '+fmtDate(a.lastActivity):'no submissions yet'}</span>
+          <span style="color:var(--ink3)">&#8250;</span>
+        </span></div></div>`).join('')
+    :'<div class="org-empty">No administrator has created a requirement yet.</div>'}`;
+}
+
+/* ---- level 2: that administrator's requirements ---- */
+async function mgTypeList(el, owner){
+  const [types, res] = await Promise.all([
+    api('listTypes'),
+    api('listSubmissions', {filter: isSuper()&&MG_ADMIN ? {ownerEmail:owner,pageSize:100} : {pageSize:100}})
+  ]);
+  const subs=(res.items||[]);
+  MG_CACHE.subs=subs;
+  const owned=types.filter(t=>String(t.createdByEmail||'').toLowerCase()===String(owner).toLowerCase());
+  const who=owned.length?owned[0].createdBy:(MG_ADMIN||ME.name);
+
+  el.innerHTML=`
+    ${isSuper()&&MG_ADMIN?crumbs([{label:'Administrators',go:"mgHome()"},{label:who}]):''}
+    <h2 class="pt">${isSuper()&&MG_ADMIN?esc(who)+'&rsquo;s assignments':'Assignments I manage'}</h2>
+    <p class="ps">${isSuper()&&MG_ADMIN
+      ? 'Requirements created by this administrator. Open one to see who has turned it in.'
+      : 'Requirements you created. Open one to see who has turned it in and to review their work.'}</p>
+    ${!isSuper()?`<div class="seg">
+      <button class="on">My assignments</button>
+      <button onclick="subView('list')">All submissions</button></div>`:''}
+    ${owned.length?owned.map(t=>{
+      const mine=subs.filter(x=>x.typeId===t.id);
+      const cp=currentPeriod(t.frequency);
+      const cur=(t.frequency&&t.frequency!=='One-time')
+        ? mine.filter(x=>periodKey(t.frequency,x.submittedAt)===cp) : mine;
+      const pend=cur.filter(x=>x.status==='Pending').length;
+      const appr=cur.filter(x=>x.status==='Approved').length;
+      const rev=cur.filter(x=>x.status==='Needs Revision').length;
+      return `<div class="task" onclick="mgOpenType('${esc(t.id)}')">
+        <div class="task-ico">${pend?pend:'&#10003;'}</div>
+        <div class="task-b">
+          <div class="task-t">${esc(t.title)}</div>
+          <div class="task-m">
+            <span class="pill role">${esc(t.frequency||'One-time')}</span>
+            ${t.frequency&&t.frequency!=='One-time'?`<span>${esc(periodLabel(t.frequency,cp))}</span>`:''}
+            <span class="pill ${t.status==='Active'?'approved':'off'}">${esc(t.status)}</span>
+            <span>${String(t.assignedTo||'All').toLowerCase()==='all'?'Everyone':String(t.assignedTo).split(/[,;]/).length+' assigned'}</span>
+          </div>
+          <div class="task-m" style="margin-top:6px">
+            ${pend?`<span class="mini a">${pend} to review</span>`:''}
+            ${appr?`<span class="mini g">${appr} approved</span>`:''}
+            ${rev?`<span class="mini r">${rev} in revision</span>`:''}
+            ${!cur.length?'<span class="mini n">nothing turned in yet</span>':''}
+          </div>
+        </div><div class="task-go">&#8250;</div></div>`;}).join('')
+    :`<div class="org-empty">${isSuper()&&MG_ADMIN
+        ? 'This administrator has not created any requirements.'
+        : '<b>You have not assigned anything yet.</b><br>Go to <b>Requirements</b> to create one.'}</div>`}`;
+}
+
+/* ---- level 3: one requirement, per person ---- */
+async function mgTypeDetail(el, owner){
+  const [types, users, res] = await Promise.all([
+    api('listTypes'), api('listUsers'),
+    api('listSubmissions',{filter:{typeId:MG_TYPE,pageSize:100,sort:'date_desc'}})
+  ]);
+  const t=types.find(x=>x.id===MG_TYPE);
+  if(!t){MG_TYPE=null;return render('submissions');}
+  const subs=res.items||[];
+  const recurring=t.frequency&&t.frequency!=='One-time';
+  const cp=currentPeriod(t.frequency);
+
+  const assigned=users.filter(u=>{
+    if(!u.active) return false;
+    if(String(u.email).toLowerCase()===String(t.createdByEmail||'').toLowerCase()) return false;
+    const to=String(t.assignedTo||'All').toLowerCase().trim();
+    if(!to||to==='all') return true;
+    return to.split(/[,;]/).map(x=>x.trim()).indexOf(String(u.email).toLowerCase())>-1;
+  });
+
+  const crumb=[];
+  if(isSuper()&&MG_ADMIN) crumb.push({label:'Administrators',go:"mgHome()"});
+  crumb.push({label:isSuper()&&MG_ADMIN?esc(t.createdBy):'My assignments',go:"mgBackToTypes()"});
+  crumb.push({label:t.title});
+
+  el.innerHTML=`
+    ${crumbs(crumb)}
+    <div class="detail-head">
+      <h3>${esc(t.title)}</h3>
+      <div class="dm">
+        <span>${esc(t.frequency||'One-time')}</span>
+        ${recurring?`<span>Period: ${esc(periodLabel(t.frequency,cp))}</span>`:''}
+        ${t.dueDate?`<span>Due ${fmtDate(t.dueDate)}</span>`:''}
+        <span>${assigned.length} assigned</span>
+        <span>Created by ${esc(t.createdBy)}</span>
+      </div>
+    </div>
+    ${t.description?`<div class="card"><b class="f-lex">Instructions given to staff</b>
+      <div class="instr" style="margin-top:10px">${esc(t.description)}</div></div>`:''}
+    <div class="card">
+      <b class="f-lex">Who has turned in${recurring?' &mdash; '+esc(periodLabel(t.frequency,cp)):''}</b>
+      <div class="tw" style="margin-top:10px"><table class="hist">
+        <tr><th>Staff</th><th>Turned in</th><th>File</th><th>Their progress</th><th>Review</th><th></th></tr>
+        ${assigned.length?assigned.map(u=>{
+          const mine=subs.filter(x=>x.submitterId===u.id||x.submitterEmail===u.email);
+          const cur=recurring?mine.find(x=>periodKey(t.frequency,x.submittedAt)===cp):mine[0];
+          return `<tr>
+            <td class="per">${esc(u.name)}<div style="font-size:.74rem;color:var(--ink3)">${esc(u.email)}</div></td>
+            <td>${cur?fmtDT(cur.submittedAt):'<span class="mini n">Not yet</span>'}</td>
+            <td>${cur&&cur.fileUrl?`<a href="${esc(cur.fileUrl)}" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">Open</a>`:'-'}</td>
+            <td>${cur?progPill(cur.progress):'-'}</td>
+            <td>${cur?statusPill(cur.status):'-'}${cur&&cur.reviewNotes?`<div style="font-size:.75rem;color:var(--ink3);margin-top:3px">${expandable(cur.reviewNotes,70)}</div>`:''}</td>
+            <td style="white-space:nowrap">${cur?`<button class="btn sm navy" onclick='reviewModal(${JSON.stringify(cur)})'>Review</button>`:''}
+              ${mine.length>1?`<div style="font-size:.72rem;color:var(--ink3);margin-top:3px">${mine.length} in total</div>`:''}</td>
+          </tr>`;}).join('')
+        :'<tr><td colspan="6" class="empty">Nobody is assigned to this requirement.</td></tr>'}
+      </table></div>
+    </div>`;
+}
+function mgBackToTypes(){MG_TYPE=null;render('submissions');}
+
 /* ---------------- Reviewer view grouped by person ---------------- */
-let SUB_VIEW='list', OPEN_PERSON=null;
-function subView(v){SUB_VIEW=v;OPEN_PERSON=null;render('submissions');}
+let SUB_VIEW='manage', OPEN_PERSON=null;
+function subView(v){SUB_VIEW=v;OPEN_PERSON=null;MG_ADMIN=null;MG_TYPE=null;render('submissions');}
 function togglePerson(id){OPEN_PERSON=OPEN_PERSON===id?null:id;render('submissions');}
 
 async function viewByPerson(el){
@@ -1380,15 +1544,18 @@ function typesRender(){
   const shown = TYPES_ALL.slice(0, TYPES_SHOW);
   $('typeRows').innerHTML = shown.length ? shown.map(t=>`<tr>
       <td><b>${esc(t.title)}</b>${t.description?`<div style="font-size:.78rem;color:var(--ink3);margin-top:3px">${expandable(t.description,110)}</div>`:''}</td>
+      <td style="font-size:.8rem">${t.owned?'<span class="pill gold">You</span>':esc(t.createdBy)}</td>
       <td>${esc(t.frequency||'-')}</td><td>${t.dueDate?fmtDate(t.dueDate):'-'}</td>
       <td style="font-size:.8rem">${String(t.assignedTo||'All').toLowerCase()==='all'
         ? '<span class="pill gold">Everyone</span>'
         : String(t.assignedTo).split(/[,;]/).length + ' selected'}</td>
       <td>${t.requiresFile?'Required':'Optional'}</td>
       <td><span class="pill ${t.status==='Active'?'approved':'off'}">${esc(t.status)}</span></td>
-      <td style="white-space:nowrap"><button class="btn sm ghost" onclick='typeModal(${JSON.stringify(t)})'>Edit</button>
-        <button class="btn sm ghost" onclick="delType('${esc(t.id)}')">Delete</button></td></tr>`).join('')
-    : '<tr><td colspan="7" class="empty">No requirements yet. Create one so staff have something to submit.</td></tr>';
+      <td style="white-space:nowrap">${(t.owned||isSuper())
+        ? `<button class="btn sm ghost" onclick='typeModal(${JSON.stringify(t)})'>Edit</button>
+           <button class="btn sm ghost" onclick="delType('${esc(t.id)}')">Delete</button>`
+        : '<span class="muted" style="font-size:.76rem">Managed by ' + esc(t.createdBy) + '</span>'}</td></tr>`).join('')
+    : '<tr><td colspan="8" class="empty">No requirements yet. Create one so staff have something to submit.</td></tr>';
   $('typeMore').innerHTML = (TYPES_ALL.length > TYPES_SHOW)
     ? `<button class="btn ghost" onclick="typesMore()">Load more (${TYPES_ALL.length-TYPES_SHOW} more)</button>
        <span class="info">Showing ${shown.length} of ${TYPES_ALL.length}</span>`
@@ -1402,10 +1569,13 @@ async function viewRequirements(el){
   TYPES_ALL = list; TYPES_SHOW = 10;
   el.innerHTML = `
     <div class="row"><div><h2 class="pt">Requirements</h2>
-      <p class="ps">What staff are asked to submit. Assign to everyone or to specific people.</p></div>
+      <p class="ps">What staff are asked to submit. ${isSuper()
+        ? 'You can see and manage every administrator&rsquo;s requirements.'
+        : 'You manage the ones you created; others are shown for reference only.'}
+        You are never assigned your own requirement &mdash; you review it instead.</p></div>
       <button class="btn right" onclick="typeModal()">New requirement</button></div>
     <div class="card"><div class="tw"><table>
-      <tr><th>Title</th><th>Frequency</th><th>Due</th><th>Assigned to</th><th>File</th><th>Status</th><th></th></tr>
+      <tr><th>Title</th><th>Created by</th><th>Frequency</th><th>Due</th><th>Assigned to</th><th>File</th><th>Status</th><th></th></tr>
       <tbody id="typeRows"></tbody>
     </table></div><div class="loadwrap" id="typeMore"></div></div>`;
   typesRender();
